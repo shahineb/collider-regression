@@ -4,10 +4,9 @@ from math import floor
 
 
 def make_transition_matrices(d_X1, d_X2, d_Y, seed):
-    # Define transition matrices - fixed seed
-    np.random.seed(seed)
-    X2_X1 = np.random.randn(d_X1, d_X2)
-    Y_X1 = np.random.randn(d_X1, d_Y)
+    # Define transition matrices
+    X2_X1 = np.ones((d_X1, d_X2)) / (d_X1 * d_X2)
+    Y_X1 = np.ones((d_X1, d_Y)) / (d_X1 * d_Y)
     return X2_X1, Y_X1
 
 
