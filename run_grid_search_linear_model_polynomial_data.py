@@ -48,15 +48,12 @@ def main(args, cfg):
 
 def run(cfg, hyperparams):
     # Create dataset
-    logging.info("Loading dataset")
     data = make_data(cfg={'data': hyperparams}, builder=polynomial.build_data_generator)
 
     # Instantiate model
     baseline, collider = make_model(cfg)
-    logging.info(f"{baseline, collider}")
 
     # Fit model
-    logging.info("\n Fitting model")
     baseline, collider = fit(baseline=baseline, collider=collider, data=data, cfg=cfg)
 
     # Run evaluation

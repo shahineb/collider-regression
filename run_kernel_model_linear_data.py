@@ -1,7 +1,7 @@
 """
-Description : Runs linear regression model with linear data generating process
+Description : Runs kernel ridge regression model with linear data generating process
 
-Usage: run_linear_model_linear_data.py  [options] --cfg=<path_to_config> --o=<output_dir>
+Usage: run_kernel_model_linear_data.py  [options] --cfg=<path_to_config> --o=<output_dir>
 
 Options:
   --cfg=<path_to_config>           Path to YAML configuration file to use.
@@ -54,7 +54,9 @@ def main(args, cfg):
 def make_model(cfg, data):
     # Instantiate base kernels
     k = kernels.RBFKernel()
-    l = kernels.RBFKernel()
+    l = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xsemitrain.size(1))))
+    k.lengthscale = 3
+    l.lengthscale = 3
 
     # Precompute kernel matrices
     K = k(data.Xsemitrain, data.Xsemitrain).evaluate()
@@ -95,14 +97,17 @@ def evaluate(baseline, project_before, project_after, data, cfg):
         pred_after = project_after(X)
 
     # Compute MSEs
-    baseline_mse = torch.square(Y - pred_baseline).mean()
-    before_mse = torch.square(Y - pred_before).mean()
-    after_mse = torch.square(Y - pred_after).mean()
+    baseline_mse = torch.square(Y - pred_baseline).mean().item()
+    before_mse = torch.square(Y - pred_before).mean().item()
+    after_mse = torch.square(Y - pred_after).mean().item()
 
     # Make output dict
-    output = {'baseline': baseline_mse.item(),
-              'before': before_mse.item(),
-              'after': after_mse.item()}
+    output = {'baseline': baseline_mse,
+              'before': before_mse,
+              'after': after_mse,
+              'baseline__before': baseline_mse - before_mse,
+              'baseline__after': baseline_mse - after_mse,
+              'after__before': after_mse - before_mse}
     return output
 
 

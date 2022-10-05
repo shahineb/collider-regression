@@ -17,7 +17,7 @@ data:
   d_Y: 1
 
   # Proportion of semi-supervised samples (>0)
-  semi_prop: 0.5
+  semi_prop: 3.
 
   # Random seed for training set generation
   seed: 5

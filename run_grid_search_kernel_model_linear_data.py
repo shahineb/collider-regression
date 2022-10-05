@@ -1,7 +1,7 @@
 """
-Description : Runs hyperparameter search for linear regression regression experiment
+Description : Runs hyperparameter search for kernel ridge regression regression experiment with linear data generating process
 
-Usage: run_grid_search_linear_model_linear_data.py  [options] --cfg=<path_to_config> --o=<output_dir>
+Usage: run_grid_search_kernel_model_linear_data.py  [options] --cfg=<path_to_config> --o=<output_dir>
 
 Options:
   --cfg=<path_to_config>           Path to YAML configuration file to use.
@@ -15,7 +15,7 @@ from docopt import docopt
 from tqdm import tqdm
 from src.generate_data import make_data, linear
 from utils import product_dict, flatten_dict_as_str
-from run_linear_model_linear_data import make_model, fit, evaluate
+from run_kernel_model_linear_data import make_model, fit, evaluate
 
 
 def main(args, cfg):
@@ -51,13 +51,20 @@ def run(cfg, hyperparams):
     data = make_data(cfg={'data': hyperparams}, builder=linear.build_data_generator)
 
     # Instantiate model
-    baseline, collider = make_model(cfg)
+    baseline, project_before, project_after = make_model(cfg=cfg, data=data)
 
     # Fit model
-    baseline, collider = fit(baseline=baseline, collider=collider, data=data, cfg=cfg)
-
+    baseline, project_before, project_after = fit(baseline=baseline,
+                                                  project_before=project_before,
+                                                  project_after=project_after,
+                                                  data=data,
+                                                  cfg=cfg)
     # Run evaluation
-    scores = evaluate(baseline=baseline, collider=collider, data=data, cfg=cfg)
+    scores = evaluate(baseline=baseline,
+                      project_before=project_before,
+                      project_after=project_after,
+                      data=data,
+                      cfg=cfg)
     return scores
 
 
