@@ -1,7 +1,7 @@
 """
 Description : Runs hyperparameter search for linear regression regression experiment
 
-Usage: run_grid_search_linear_regression.py  [options] --cfg=<path_to_config> --o=<output_dir>
+Usage: run_grid_search_linear_model_linear_data.py  [options] --cfg=<path_to_config> --o=<output_dir>
 
 Options:
   --cfg=<path_to_config>           Path to YAML configuration file to use.

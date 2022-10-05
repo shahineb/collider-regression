@@ -1,7 +1,7 @@
 """
-Description : Runs linear regression model with linear data generating process
+Description : Runs linear regression model with polynomial data generating process
 
-Usage: run_linear_model_linear_data.py  [options] --cfg=<path_to_config> --o=<output_dir>
+Usage: run_linear_model_polynomial_data.py  [options] --cfg=<path_to_config> --o=<output_dir>
 
 Options:
   --cfg=<path_to_config>           Path to YAML configuration file to use.
@@ -15,13 +15,13 @@ import logging
 from docopt import docopt
 import torch
 from sklearn.linear_model import LinearRegression
-from src.generate_data import make_data, linear
+from src.generate_data import make_data, polynomial
 
 
 def main(args, cfg):
     # Create dataset
     logging.info("Loading dataset")
-    data = make_data(cfg=cfg, builder=linear.build_data_generator)
+    data = make_data(cfg=cfg, builder=polynomial.build_data_generator)
 
     # Instantiate model
     baseline, collider = make_model(cfg=cfg)

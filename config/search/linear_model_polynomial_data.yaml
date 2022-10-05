@@ -1,5 +1,22 @@
+################################################################################
+#   CONFIGURATIONS OF GRID SEARCH FOR LINEAR MODEL WITH LINEAR DATA GENERATING PROCESS
+################################################################################
+
+# EVALUATION
+evaluation:
+  # Number of samples to use for evaluation
+  n_test: 5000
+
+  # Random seed for testing set generation
+  seed: 42
+
+
+
 # GRID SEARCH
 search:
+  # Number of cores for search parallelisation
+  n_jobs: 4
+
   # Search grid
   grid:
     # Number of samples
@@ -7,24 +24,24 @@ search:
       - 20
       - 40
       - 60
-      - 80
-      - 100
-      - 150
-      - 200
-      - 300
+      # - 80
+      # - 100
+      # - 150
+      # - 200
+      # - 300
 
     # Seed used to generate the samples
     seed:
       - 2
       - 3
       - 5
-      - 7
-      - 11
-      - 13
-      - 17
-      - 19
-      - 23
-      - 29
+      # - 7
+      # - 11
+      # - 13
+      # - 17
+      # - 19
+      # - 23
+      # - 29
       # - 31
       # - 37
       # - 41
@@ -71,39 +88,35 @@ search:
     d_Y:
       - 1
       - 2
-      - 3
-      - 4
-      - 5
-      - 7
-      - 9
+      # - 3
+      # - 4
+      # - 5
+      # - 7
+      # - 9
 
 
     # Dimension of X1
     d_X1:
       - 1
       - 2
-      - 3
-      - 4
-      - 5
-      - 7
-      - 9
+      # - 3
+      # - 4
+      # - 5
+      # - 7
+      # - 9
 
 
     # Dimension of X2
     d_X2:
       - 1
       - 2
-      - 3
-      - 4
-      - 5
-      - 7
-      - 9
-
+      # - 3
+      # - 4
+      # - 5
+      # - 7
+      # - 9
 
 
     # Proportion of semi-supervised samples
     semi_prop:
       - 0.
-
-    poly:
-     - True
