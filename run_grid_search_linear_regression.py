@@ -10,21 +10,20 @@ Options:
 import os
 import yaml
 import logging
+from joblib import Parallel, delayed
 from docopt import docopt
-from progress.bar import Bar
+from tqdm import tqdm
+from src.generate_data import make_data, linear
 from utils import product_dict, flatten_dict_as_str
-from run_linear_regression import run
+from run_linear_model_linear_data import make_model, fit, evaluate
 
 
 def main(args, cfg):
     # Create cartesian product of grid search parameters
     hyperparams_grid = list(product_dict(**cfg['search']['grid']))
-    n_grid_points = len(hyperparams_grid)
-    search_bar = Bar("Grid Search", max=n_grid_points)
 
-    # Iterate over combinations of hyperparameters
-    for j, hyperparams in enumerate(hyperparams_grid):
-
+    # Create a single iteration function
+    def iteration(hyperparams):
         # Flatten out hyperparameters into string to name output directory
         dirname = flatten_dict_as_str(hyperparams)
         output_dir = os.path.join(args['--o'], dirname)
@@ -35,16 +34,34 @@ def main(args, cfg):
             yaml.dump(hyperparams, f)
 
         # Run linear model
-        scores = run(**hyperparams)
+        scores = run(cfg, hyperparams)
 
         # Dump scores
         dump_path = os.path.join(output_dir, 'scores.metrics')
         with open(dump_path, 'w') as f:
             yaml.dump(scores, f)
 
-        # Update progress bar
-        search_bar.suffix = f"{j + 1}/{n_grid_points} | {hyperparams}"
-        search_bar.next()
+    # Parallelise grid search
+    Parallel(n_jobs=cfg['search']['n_jobs'])(delayed(iteration)(hyperparams)
+                                             for hyperparams in tqdm(hyperparams_grid))
+
+
+def run(cfg, hyperparams):
+    # Create dataset
+    logging.info("Loading dataset")
+    data = make_data(cfg={'data': hyperparams}, builder=linear.build_data_generator)
+
+    # Instantiate model
+    baseline, collider = make_model(cfg)
+    logging.info(f"{baseline, collider}")
+
+    # Fit model
+    logging.info("\n Fitting model")
+    baseline, collider = fit(baseline=baseline, collider=collider, data=data, cfg=cfg)
+
+    # Run evaluation
+    scores = evaluate(baseline=baseline, collider=collider, data=data, cfg=cfg)
+    return scores
 
 
 if __name__ == "__main__":
@@ -56,7 +73,7 @@ if __name__ == "__main__":
         cfg = yaml.safe_load(f)
 
     # Setup logging
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.ERROR)
     logging.info(f'Arguments: {args}\n')
     logging.info(f'Configuration file: {cfg}\n')
 
