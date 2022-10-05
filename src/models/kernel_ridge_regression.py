@@ -29,7 +29,7 @@ class KRR(nn.Module):
         n = len(y)
         K = self.kernel(X, X)
         Kλ = K.add_diag(self.λ * n * torch.ones(n)).evaluate()
-        Kλ_inv = torch.linalg.cholesky_inverse(Kλ)
+        Kλ_inv = torch.cholesky_inverse(Kλ)
         α = Kλ_inv @ y
         self.register_buffer('X', X)
         self.register_buffer('α', α)
