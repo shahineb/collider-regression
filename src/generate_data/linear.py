@@ -23,7 +23,7 @@ def build_data_generator(d_X1, d_X2, d_Y):
         return X, Y
 
     # Define utility that wraps up above
-    def generate(n, seed=None, most_gain=False):
+    def generate(n, seed=None, most_gain=False,most_gain_sample=0):
         if seed:
             torch.random.manual_seed(seed)
         if most_gain:

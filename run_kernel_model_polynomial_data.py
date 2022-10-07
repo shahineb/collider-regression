@@ -94,15 +94,32 @@ def evaluate(baseline, project_before, project_after, data, cfg):
         pred_before = project_before(X)
         pred_after = project_after(X)
 
+ 
     # Compute MSEs
     baseline_mse = torch.square(Y - pred_baseline).mean()
     before_mse = torch.square(Y - pred_before).mean()
     after_mse = torch.square(Y - pred_after).mean()
 
+    if cfg["evaluation"]["most_gain"]:
+        d = cfg["evaluation"]["most_gain"]
+        X,Y=data.generate(n=cfg['evaluation']['n_test'],
+                         seed=cfg['evaluation']['seed'],most_gain=True, most_gain_samples=d)
+        pred_baseline_avg=torch.zeros_like(Y)
+        for i in range(d):             
+            pred_slice = baseline(X[:,:,i])
+            pred_baseline_avg += pred_slice
+        most_gain = torch.square(Y - pred_baseline).mean()
+
     # Make output dict
-    output = {'baseline': baseline_mse.item(),
-              'before': before_mse.item(),
-              'after': after_mse.item()}
+    if cfg["evaluation"]["most_gain"]:
+        output = {'baseline': baseline_mse.item(),
+                  'before': before_mse.item(),
+                  'after': after_mse.item(),
+                  "most_gain":most_gain.item()} 
+    else:   
+        output = {'baseline': baseline_mse.item(),
+                'before': before_mse.item(),
+                'after': after_mse.item()}
     return output
 
 

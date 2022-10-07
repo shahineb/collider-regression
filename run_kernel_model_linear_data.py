@@ -100,14 +100,33 @@ def evaluate(baseline, project_before, project_after, data, cfg):
     baseline_mse = torch.square(Y - pred_baseline).mean().item()
     before_mse = torch.square(Y - pred_before).mean().item()
     after_mse = torch.square(Y - pred_after).mean().item()
-
+    
+    # New most gain
+    if cfg["evaluation"]["most_gain"]:
+        d = cfg["evaluation"]["most_gain"]
+        X,Y=data.generate(n=cfg['evaluation']['n_test'],
+                         seed=cfg['evaluation']['seed'], most_gain_samples=d)
+        pred_baseline_avg=torch.zeros_like(Y)
+        for i in range(d):             
+            pred_slice = baseline(X[:,:,i])
+            pred_baseline_avg += pred_slice
+        most_gain = torch.square(Y - pred_baseline).mean()
+    
     # Make output dict
-    output = {'baseline': baseline_mse,
-              'before': before_mse,
-              'after': after_mse,
-              'baseline__before': baseline_mse - before_mse,
-              'baseline__after': baseline_mse - after_mse,
-              'after__before': after_mse - before_mse}
+        output = {'baseline': baseline_mse,
+                  'before': before_mse,
+                  'after': after_mse,
+                  'baseline__before': baseline_mse - before_mse,
+                  'baseline__after': baseline_mse - after_mse,
+                  'after__before': after_mse - before_mse,
+                  "most_gain" : most_gain}
+    else:
+        output = {'baseline': baseline_mse,
+                  'before': before_mse,
+                  'after': after_mse,
+                  'baseline__before': baseline_mse - before_mse,
+                  'baseline__after': baseline_mse - after_mse,
+                  'after__before': after_mse - before_mse}
     return output
 
 
