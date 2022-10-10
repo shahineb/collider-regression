@@ -16,6 +16,9 @@ data:
   # Dimensionality of Y
   d_Y: 3
 
+  # Standard deviation of noise applied to X1
+  noise: 0.1
+
   # Proportion of semi-supervised samples (>0)
   semi_prop: 0.5
 

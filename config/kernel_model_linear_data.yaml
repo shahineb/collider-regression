@@ -5,7 +5,7 @@
 # DATASET
 data:
   # Number of training samples
-  n: 200
+  n: 600
 
   # Dimensionality of X1
   d_X1: 3
@@ -15,6 +15,9 @@ data:
 
   # Dimensionality of Y
   d_Y: 1
+
+  # Standard deviation of noise applied to X1
+  noise: 0.1
 
   # Proportion of semi-supervised samples (>0)
   semi_prop: 3.
@@ -28,22 +31,22 @@ model:
   # CME estimate
   cme:
     # Regularisation weight for CME estimation
-    lbda: 1.
+    lbda: 0.1
 
   # Baseline model
   baseline:
     # Regularisation weight for baseline model
-    lbda: 1.
+    lbda: 0.001
 
   # Solving for ERM inside projected RKHS = "project before"
   project_before:
     # Regularisation weight for "project before" model
-    lbda: 1.
+    lbda: 0.001
 
   # Solving for ERM in full RKHS and then projecting = "project after"
   project_after:
     # Regularisation weight for "project after" model
-    lbda: 1.
+    lbda: 0.001
 
 
 # EVALUATION

@@ -29,7 +29,8 @@ def make_data(cfg, builder):
     # Instantiate synthetic data generator
     data_generator = builder(d_X1=cfg['data']['d_X1'],
                              d_X2=cfg['data']['d_X2'],
-                             d_Y=cfg['data']['d_Y'])
+                             d_Y=cfg['data']['d_Y'],
+                             noise=cfg['data']['noise'])
 
     # Extract useful variables from config
     n = cfg['data']['n']

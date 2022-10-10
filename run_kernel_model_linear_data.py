@@ -55,8 +55,8 @@ def make_model(cfg, data):
     # Instantiate base kernels
     k = kernels.RBFKernel()
     l = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xsemitrain.size(1))))
-    k.lengthscale = 3
-    l.lengthscale = 3
+    k.lengthscale = 10.
+    l.lengthscale = 10.
 
     # Precompute kernel matrices
     K = k(data.Xsemitrain, data.Xsemitrain).evaluate()
@@ -100,18 +100,18 @@ def evaluate(baseline, project_before, project_after, data, cfg):
     baseline_mse = torch.square(Y - pred_baseline).mean().item()
     before_mse = torch.square(Y - pred_before).mean().item()
     after_mse = torch.square(Y - pred_after).mean().item()
-    
+
     # New most gain
     if cfg["evaluation"]["most_gain"]:
         d = cfg["evaluation"]["most_gain"]
         X,Y=data.generate(n=cfg['evaluation']['n_test'],
                          seed=cfg['evaluation']['seed'], most_gain_samples=d)
         pred_baseline_avg=torch.zeros_like(Y)
-        for i in range(d):             
+        for i in range(d):
             pred_slice = baseline(X[:,:,i])
             pred_baseline_avg += pred_slice
         most_gain = torch.square(Y - pred_baseline).mean()
-    
+
     # Make output dict
         output = {'baseline': baseline_mse,
                   'before': before_mse,
