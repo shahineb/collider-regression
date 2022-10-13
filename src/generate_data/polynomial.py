@@ -13,18 +13,18 @@ def build_data_generator(d_X1, d_X2, d_Y, noise):
     def generate_data(n):
         Y = torch.randn(n, d_Y)
         X2 = torch.randn(n, d_X2)
-        X1 = (Y_X1 @ Y.T + X2_X1 @ X2.T + X2_X1_poly @ (X2**2).T + Y_X1_poly @ (Y**2).T + X_1_mix @ X2.T @ Y).T
+        X1 = (Y_X1 @ Y.T + X2_X1 @ X2.T + X2_X1_poly @ (X2**2).T + Y_X1_poly @ (Y**2).T ).T
         X1.add_(noise * torch.randn(n, d_X1))
         X = torch.cat((X1, X2), dim=1)
         return X, Y
 
     # Define utility that generates samples for most gain evaluation
     def generate_most_gain_data(n, most_gain_sample):
-        Y = torch.randn(n, d_Y)
+        Y = torch.randn(n, d_X1, most_gain_sample)
         X2 = torch.randn(n, d_X2)
         X2 = X2.unsqueeze(2).repeat(1, 1, most_gain_sample)
-        X1 = (X2_X1 @ X2.T + X2_X1_poly @ X2.T + Y_X1_poly @ Y .T + X_1_mix @ X2.T @ Y).T
-        X1 = X1 + torch.randn(n, d_X1, most_gain_sample)  # to finish
+        X1 = (Y_X1 @ Y.T + X2_X1 @ X2.T + X2_X1_poly @ (X2**2).T  + Y_X1_poly @ (Y**2).T).T
+        X1 =  X1.add_(noise * torch.randn(n, d_X1,most_gain_sample))  # to finish
         X = torch.cat([X1, X2], dim=1)
         Y = torch.zeros(n, d_Y)
         return X, Y
