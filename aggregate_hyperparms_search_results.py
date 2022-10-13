@@ -156,6 +156,7 @@ def extract_best_hyperparams(scores_dataset, k):
     for metric, values in mean_scores.data_vars.variables.items():
         # Compute multidimensional sorting indices
         sorted_idx = np.stack(np.unravel_index(np.argsort(values.values, axis=None), values.shape))
+        # foo = np.argsort(values.values, axis=None)
 
         # Get indices of top/last values
         top_k_idx = sorted_idx.T[-k::-1].tolist()

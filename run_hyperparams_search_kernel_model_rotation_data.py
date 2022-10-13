@@ -16,6 +16,7 @@ from docopt import docopt
 from tqdm import tqdm
 import torch
 from gpytorch import kernels
+import linear_operator
 from src.generate_data import make_data, rotation
 from src.models import KRR
 from src.kernels import ProjectedKernel
@@ -31,6 +32,7 @@ def main(args, cfg):
 
     # Create a single iteration functional
     def build_iteration(run_fn, model_dir):
+        os.makedirs(os.path.join(args['--o'], model_dir), exist_ok=True)
         with open(os.path.join(args['--o'], model_dir, 'cfg.yaml'), 'w') as f:
             buffer = cfg.copy()
             buffer['search']['grid'] = buffer['search'].pop(f'{model_dir}_grid')
@@ -49,7 +51,7 @@ def main(args, cfg):
             # Run model
             try:
                 scores = run_fn(cfg, hyperparams)
-            except torch._C._LinAlgError:
+            except linear_operator.utils.errors.NotPSDError:
                 return
 
             # Dump scores

@@ -42,20 +42,24 @@ search:
     # Seed for data generation
     seed:
       - 2
-      # - 3
-      # - 5
-      # - 7
-      # - 11
+      - 3
+      - 5
+      - 7
+      - 11
 
     # Lengthscale of primary kernel
     k_lengthscale:
       - 1.
-      - 10.
+      - 2.
+      - 4.
+      - 8.
 
     # KRR regularisation
     lbda_krr:
       - 0.1
       - 0.01
+      - 0.001
+      - 0.0001
 
 
   # Search grid for "project before" model
@@ -63,30 +67,37 @@ search:
     # Seed for data generation
     seed:
       - 2
-      # - 3
-      # - 5
-      # - 7
-      # - 11
+      - 3
+      - 5
+      - 7
+      - 11
 
     # Lengthscale of primary kernel
     k_lengthscale:
       - 1.
-      - 10.
+      - 2.
+      - 4.
+      - 8.
 
     # Lengthscale of secondary kernel
     l_lengthscale:
       - 1.
-      - 10.
+      - 2.
+      - 4.
+      - 8.
 
     # KRR regularisation
     lbda_krr:
       - 0.1
       - 0.01
+      - 0.001
+      - 0.0001
 
     # CME regularisation
     lbda_cme:
-      - 0.1
       - 0.01
+      - 0.1
+      - 1.
 
 
 
@@ -95,27 +106,35 @@ search:
     # Seed for data generation
     seed:
       - 2
-      # - 3
-      # - 5
-      # - 7
-      # - 11
+      - 3
+      - 5
+      - 7
+      - 11
 
     # Lengthscale of primary kernel
     k_lengthscale:
       - 1.
-      - 10.
+      - 2.
+      - 4.
+      - 8.
 
     # Lengthscale of secondary kernel
     l_lengthscale:
       - 1.
-      - 10.
+      - 2.
+      - 4.
+      - 8.
+
 
     # KRR regularisation
     lbda_krr:
       - 0.1
       - 0.01
+      - 0.001
+      - 0.0001
 
     # CME regularisation
     lbda_cme:
-      - 0.1
       - 0.01
+      - 0.1
+      - 1.

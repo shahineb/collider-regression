@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from linear_operator.utils.cholesky import psd_safe_cholesky
 
 
 class KRR(nn.Module):
@@ -28,8 +29,8 @@ class KRR(nn.Module):
         """
         n = len(y)
         K = self.kernel(X, X)
-        Kλ = K.add_diag(self.λ * n * torch.ones(n)).add_jitter().evaluate()
-        chol = torch.linalg.cholesky(Kλ)
+        Kλ = K.add_diag(self.λ * n * torch.ones(n)).evaluate()
+        chol = psd_safe_cholesky(Kλ)
         α = torch.cholesky_solve(y.view(-1, 1), chol).squeeze()
         self.register_buffer('X', X)
         self.register_buffer('α', α)
