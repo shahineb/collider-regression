@@ -43,10 +43,15 @@ model:
     # Regularisation weight for "project before" model
     lbda: 1.
 
-  # Solving for ERM in full RKHS and then projecting = "project after"
-  project_after:
-    # Regularisation weight for "project after" model
-    lbda: 1.
+  # Primary kernel
+  k:
+    # RBF lengthscale
+    lengthscale: 10.
+
+  # Secondary kernel
+  l:
+    # RBF lengthscale
+    lengthscale: 10.
 
 
 # EVALUATION
