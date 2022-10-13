@@ -98,9 +98,9 @@ def evaluate(baseline, project_before, data, cfg):
         # pred_after = baseline(X) - project_before.kernel(X, project_before.kernel.X) @ project_before.kernel.Lλ_inv @ baseline(project_before.kernel.X)
 
     # Compute MSEs
-    baseline_mse = torch.square(Y - pred_baseline).mean()
-    before_mse = torch.square(Y - pred_before).mean()
-    after_mse = torch.square(Y - pred_after).mean()
+    baseline_mse = torch.square(Y.squeeze() - pred_baseline).mean()
+    before_mse = torch.square(Y.squeeze() - pred_before).mean()
+    after_mse = torch.square(Y.squeeze() - pred_after).mean()
 
     # Compute CME Fit:
 
