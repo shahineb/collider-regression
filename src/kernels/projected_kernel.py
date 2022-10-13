@@ -18,7 +18,7 @@ class ProjectedKernel(kernels.Kernel):
         self.l = l
         self.K = K
         self.Lλ_inv = Lλ_inv
-        self.Lλ_inv_KW_Lλ_inv = self.Lλ_inv @ self.K @ self.Lλ_inv
+        self.Lλ_inv_K_Lλ_inv = self.Lλ_inv @ self.K @ self.Lλ_inv
         self.register_buffer('X', X)
 
     def forward(self, x1, x2, **kwargs):
@@ -33,7 +33,7 @@ class ProjectedKernel(kernels.Kernel):
         output = K_x1_to_x2
         output -= L_X_to_x1.t() @ self.Lλ_inv @ K_X_to_x2
         output -= K_X_to_x1.t() @ self.Lλ_inv @ L_X_to_x2
-        output += L_X_to_x1.t() @ self.Lλ_inv_KW_Lλ_inv @ L_X_to_x2
+        output += L_X_to_x1.t() @ self.Lλ_inv_K_Lλ_inv @ L_X_to_x2
         return output
 
 
@@ -54,7 +54,7 @@ class ResidualKernel(kernels.Kernel):
         self.l = l
         self.K = K
         self.Lλ_inv = Lλ_inv
-        self.Lλ_inv_KW_Lλ_inv = self.Lλ_inv.t() @ self.K @ self.Lλ_inv
+        self.Lλ_inv_K_Lλ_inv = self.Lλ_inv.t() @ self.K @ self.Lλ_inv
         self.register_buffer('X', X)
 
     def forward(self, x1, x2, **kwargs):
@@ -63,5 +63,5 @@ class ResidualKernel(kernels.Kernel):
         L_X_to_x2 = self.l(self.X, x2).evaluate()
 
         # Combine terms together
-        output = L_X_to_x1.t() @ self.Lλ_inv_KW_Lλ_inv @ L_X_to_x2
+        output = L_X_to_x1.t() @ self.Lλ_inv_K_Lλ_inv @ L_X_to_x2
         return output

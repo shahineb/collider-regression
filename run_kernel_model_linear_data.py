@@ -26,21 +26,19 @@ def main(args, cfg):
     data = make_data(cfg=cfg, builder=linear.build_data_generator)
 
     # Instantiate model
-    baseline, project_before, project_after = make_model(cfg=cfg, data=data)
-    logging.info(f"{baseline, project_before, project_after}")
+    baseline, project_before = make_model(cfg=cfg, data=data)
+    logging.info(f"{baseline, project_before}")
 
     # Fit model
     logging.info("\n Fitting model")
-    baseline, project_before, project_after = fit(baseline=baseline,
-                                                  project_before=project_before,
-                                                  project_after=project_after,
-                                                  data=data,
-                                                  cfg=cfg)
+    baseline, project_before = fit(baseline=baseline,
+                                   project_before=project_before,
+                                   data=data,
+                                   cfg=cfg)
 
     # Run evaluation
     scores = evaluate(baseline=baseline,
                       project_before=project_before,
-                      project_after=project_after,
                       data=data,
                       cfg=cfg)
 
@@ -62,7 +60,8 @@ def make_model(cfg, data):
     K = k(data.Xsemitrain, data.Xsemitrain).evaluate()
     L = l(data.Xsemitrain, data.Xsemitrain)
     Lλ = L.add_diag(cfg['model']['cme']['lbda'] * torch.ones(L.shape[0]))
-    Lλ_inv = torch.cholesky_inverse(Lλ.evaluate())
+    chol = torch.linalg.cholesky(Lλ.evaluate())
+    Lλ_inv = torch.cholesky_inverse(chol)
 
     # Instantiate projected kernel
     kP = ProjectedKernel(k, l, data.Xsemitrain, K, Lλ_inv)
@@ -70,22 +69,17 @@ def make_model(cfg, data):
     # Instantiate regressors
     baseline = KRR(kernel=k, λ=cfg['model']['baseline']['lbda'])
     project_before = KRR(kernel=kP, λ=cfg['model']['project_before']['lbda'])
-    project_after = KRR(kernel=kP, λ=cfg['model']['project_after']['lbda'])
-    return baseline, project_before, project_after
+    return baseline, project_before
 
 
-def fit(baseline, project_before, project_after, data, cfg):
+def fit(baseline, project_before, data, cfg):
     # Fit baseline and "project before" model
     baseline.fit(data.Xtrain, data.Ytrain)
     project_before.fit(data.Xtrain, data.Ytrain)
-
-    # Use weights of baseline model to mimic a "project after" behavior
-    project_after.register_buffer('α', baseline.α)
-    project_after.register_buffer('X', baseline.X)
-    return baseline, project_before, project_after
+    return baseline, project_before
 
 
-def evaluate(baseline, project_before, project_after, data, cfg):
+def evaluate(baseline, project_before, data, cfg):
     # Generate samples to evaluate over
     X, Y = data.generate(n=cfg['evaluation']['n_test'],
                          seed=cfg['evaluation']['seed'])
@@ -94,7 +88,13 @@ def evaluate(baseline, project_before, project_after, data, cfg):
     with torch.no_grad():
         pred_baseline = baseline(X)
         pred_before = project_before(X)
-        pred_after = project_after(X)
+
+        # Compute CMEs on test set
+        Lλ_inv = project_before.kernel.Lλ_inv
+        cme = Lλ_inv @ project_before.kernel.l(data.Xsemitrain, X).evaluate()
+
+        # Project baseline model
+        pred_after = pred_baseline - baseline(data.Xsemitrain) @ cme
 
     # Compute MSEs
     baseline_mse = torch.square(Y - pred_baseline).mean().item()
@@ -102,31 +102,24 @@ def evaluate(baseline, project_before, project_after, data, cfg):
     after_mse = torch.square(Y - pred_after).mean().item()
 
     # New most gain
-    if cfg["evaluation"]["most_gain"]:
-        d = cfg["evaluation"]["most_gain"]
-        X,Y=data.generate(n=cfg['evaluation']['n_test'],
-                         seed=cfg['evaluation']['seed'], most_gain_samples=d)
-        pred_baseline_avg=torch.zeros_like(Y)
-        for i in range(d):
-            pred_slice = baseline(X[:,:,i])
-            pred_baseline_avg += pred_slice
-        most_gain = torch.square(Y - pred_baseline).mean()
+    d = cfg["evaluation"]["most_gain"]
+    X, Y = data.generate(n=cfg['evaluation']['n_test'],
+                         seed=cfg['evaluation']['seed'],
+                         most_gain_samples=d)
+    pred_baseline_avg = torch.zeros_like(Y)
+    for i in range(d):
+        pred_slice = baseline(X[:, :, i]).unsqueeze(-1)
+        pred_baseline_avg += pred_slice
+    most_gain = torch.square(Y - pred_baseline).mean()
 
     # Make output dict
-        output = {'baseline': baseline_mse,
-                  'before': before_mse,
-                  'after': after_mse,
-                  'baseline__before': baseline_mse - before_mse,
-                  'baseline__after': baseline_mse - after_mse,
-                  'after__before': after_mse - before_mse,
-                  "most_gain" : most_gain}
-    else:
-        output = {'baseline': baseline_mse,
-                  'before': before_mse,
-                  'after': after_mse,
-                  'baseline__before': baseline_mse - before_mse,
-                  'baseline__after': baseline_mse - after_mse,
-                  'after__before': after_mse - before_mse}
+    output = {'baseline': baseline_mse,
+              'before': before_mse,
+              'after': after_mse,
+              'baseline__before': baseline_mse - before_mse,
+              'baseline__after': baseline_mse - after_mse,
+              'after__before': after_mse - before_mse,
+              'most_gain': most_gain}
     return output
 
 
