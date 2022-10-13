@@ -31,6 +31,11 @@ def main(args, cfg):
 
     # Create a single iteration functional
     def build_iteration(run_fn, model_dir):
+        with open(os.path.join(args['--o'], model_dir, 'cfg.yaml'), 'w') as f:
+            buffer = cfg.copy()
+            buffer['search']['grid'] = buffer['search'].pop(f'{model_dir}_grid')
+            yaml.dump(buffer, f)
+
         def iteration(hyperparams):
             # Flatten out hyperparameters into string to name output directory
             dirname = flatten_dict_as_str(hyperparams)
