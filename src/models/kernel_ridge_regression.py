@@ -28,7 +28,7 @@ class KRR(nn.Module):
         """
         n = len(y)
         K = self.kernel(X, X)
-        Kλ = K.add_diag(self.λ * n * torch.ones(n)).evaluate()
+        Kλ = K.add_diag(self.λ * n * torch.ones(n)).add_jitter().evaluate()
         chol = torch.linalg.cholesky(Kλ)
         α = torch.cholesky_solve(y.view(-1, 1), chol).squeeze()
         self.register_buffer('X', X)

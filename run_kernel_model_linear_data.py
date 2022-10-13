@@ -53,8 +53,8 @@ def make_model(cfg, data):
     # Instantiate base kernels
     k = kernels.RBFKernel()
     l = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xsemitrain.size(1))))
-    k.lengthscale = 10.
-    l.lengthscale = 10.
+    k.lengthscale = cfg['model']['k']['lengthscale']
+    l.lengthscale = cfg['model']['l']['lengthscale']
 
     # Precompute kernel matrices
     K = k(data.Xsemitrain, data.Xsemitrain).evaluate()
