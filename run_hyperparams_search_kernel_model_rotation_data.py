@@ -65,12 +65,12 @@ def main(args, cfg):
     Parallel(n_jobs=cfg['search']['n_jobs'])(delayed(baseline_iteration)(hyperparams)
                                              for hyperparams in tqdm(hyperparams_baseline_grid))
 
-    baseline_iteration = build_iteration(run_before, 'before')
-    Parallel(n_jobs=cfg['search']['n_jobs'])(delayed(baseline_iteration)(hyperparams)
+    before_iteration = build_iteration(run_before, 'before')
+    Parallel(n_jobs=cfg['search']['n_jobs'])(delayed(before_iteration)(hyperparams)
                                              for hyperparams in tqdm(hyperparams_before_grid))
 
-    baseline_iteration = build_iteration(run_after, 'after')
-    Parallel(n_jobs=cfg['search']['n_jobs'])(delayed(baseline_iteration)(hyperparams)
+    after_iteration = build_iteration(run_after, 'after')
+    Parallel(n_jobs=cfg['search']['n_jobs'])(delayed(after_iteration)(hyperparams)
                                              for hyperparams in tqdm(hyperparams_after_grid))
 
 

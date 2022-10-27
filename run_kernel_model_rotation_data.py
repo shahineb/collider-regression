@@ -15,8 +15,8 @@ import logging
 from docopt import docopt
 import torch
 from gpytorch import kernels
-from src.models import KRR, CME_mat
-from src.kernels import ProjectedKernel
+from src.models import KRR
+from src.kernels import ProjectedKernel, ConstantKernel
 from src.generate_data import make_data, rotation
 
 
@@ -51,9 +51,12 @@ def main(args, cfg):
 
 def make_model(cfg, data):
     # Instantiate base kernels
-    k = kernels.RBFKernel()
+    k1 = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
+    k2 = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xsemitrain.size(1))))
+    k = k1 * k2
     l = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xsemitrain.size(1))))
-    k.lengthscale = cfg['model']['k']['lengthscale']
+    k1.kernels[0].lengthscale = cfg['model']['k1']['lengthscale']
+    k2.lengthscale = cfg['model']['k2']['lengthscale']
     l.lengthscale = cfg['model']['l']['lengthscale']
 
     # Precompute kernel matrices
@@ -102,8 +105,6 @@ def evaluate(baseline, project_before, data, cfg):
     before_mse = torch.square(Y.squeeze() - pred_before).mean()
     after_mse = torch.square(Y.squeeze() - pred_after).mean()
 
-    # Compute CME Fit:
-
     # New most gain
     d = cfg["evaluation"]["n_gain"]
     X, Y = data.generate(n=cfg['evaluation']['n_test'],
@@ -126,6 +127,13 @@ def evaluate(baseline, project_before, data, cfg):
     return output
 
 
+def update_cfg(cfg, args):
+    if args['--seed']:
+        cfg['data']['seed'] = int(args['--seed'])
+        cfg['evaluation']['seed'] = int(args['--seed'])
+    return cfg
+
+
 if __name__ == "__main__":
     # Read input args
     args = docopt(__doc__)
@@ -133,6 +141,7 @@ if __name__ == "__main__":
     # Load config file
     with open(args['--cfg'], "r") as f:
         cfg = yaml.safe_load(f)
+    cfg = update_cfg(cfg, args)
 
     # Setup logging
     logging.basicConfig(level=logging.INFO)
