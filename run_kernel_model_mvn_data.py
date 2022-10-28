@@ -1,7 +1,7 @@
 """
-Description : Runs kernel ridge regression model with rotation data generating process
+Description : Runs kernel ridge regression model with mvn posterior data generating process
 
-Usage: run_kernel_model_rotation_data.py  [options] --cfg=<path_to_config> --o=<output_dir>
+Usage: run_kernel_model_mvn_data.py  [options] --cfg=<path_to_config> --o=<output_dir>
 
 Options:
   --cfg=<path_to_config>           Path to YAML configuration file to use.
@@ -17,13 +17,13 @@ import torch
 from gpytorch import kernels
 from src.models import KRR
 from src.kernels import ProjectedKernel, ConstantKernel
-from src.generate_data import make_data, rotation
+from src.generate_data import make_data, mvnposterior
 
 
 def main(args, cfg):
     # Create dataset
     logging.info("Loading dataset")
-    data = make_data(cfg=cfg, builder=rotation.build_data_generator)
+    data = make_data(cfg=cfg, builder=mvnposterior.build_data_generator)
 
     # Instantiate model
     baseline, project_before = make_model(cfg=cfg, data=data)
@@ -52,19 +52,20 @@ def main(args, cfg):
 def make_model(cfg, data):
     # Instantiate base kernels
     k1 = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
-    k2 = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xsemitrain.size(1))))
+    k2 = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
     k = k1 * k2
-    l = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xsemitrain.size(1))))
+    l = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
     k1.kernels[0].lengthscale = cfg['model']['k1']['lengthscale']
     k2.lengthscale = cfg['model']['k2']['lengthscale']
     l.lengthscale = cfg['model']['l']['lengthscale']
 
     # Precompute kernel matrices
-    K = k(data.Xsemitrain, data.Xsemitrain).evaluate()
-    L = l(data.Xsemitrain, data.Xsemitrain)
-    Lλ = L.add_diag(cfg['model']['cme']['lbda'] * torch.ones(L.shape[0]))
-    chol = torch.linalg.cholesky(Lλ.evaluate())
-    Lλ_inv = torch.cholesky_inverse(chol)
+    with torch.no_grad():
+        K = k(data.Xsemitrain, data.Xsemitrain).evaluate()
+        L = l(data.Xsemitrain, data.Xsemitrain)
+        Lλ = L.add_diag(cfg['model']['cme']['lbda'] * torch.ones(L.shape[0]))
+        chol = torch.linalg.cholesky(Lλ.evaluate())
+        Lλ_inv = torch.cholesky_inverse(chol)
 
     # Instantiate projected kernel
     kP = ProjectedKernel(k, l, data.Xsemitrain, K, Lλ_inv)

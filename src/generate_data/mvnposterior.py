@@ -14,8 +14,6 @@ def build_data_generator(d_X1, d_X2, d_Y, noise):
     rbf = kernels.RBFKernel()
     rbf.lengthscale = 1.
     with torch.no_grad():
-        # torch.random.manual_seed(1)
-        # K = rbf(torch.randn(d_Z + d_X1)).evaluate()
         torch.random.manual_seed(10)
         K = rbf(torch.randn(d_Z + d_X1).flip(dims=(0,))).evaluate()
     KX1X1 = K[:d_X1, :d_X1]
@@ -27,7 +25,7 @@ def build_data_generator(d_X1, d_X2, d_Y, noise):
 
     # Define utility that generates n samples
     def generate_data(n):
-        Y = torch.randn(n, d_Y)
+        Y = 5 * torch.randn(n, d_Y)
         X2 = torch.randn(n, d_X2)
         XY = torch.cat([Y, X2], dim=1)
         Z = (XY @ R_mat.T)
@@ -35,11 +33,13 @@ def build_data_generator(d_X1, d_X2, d_Y, noise):
         X1 = mu_post + L_post @ torch.randn(d_X1, n)
         X1 = X1.T + noise * torch.randn(n, d_X1)
         X = torch.cat([X1, X2], dim=1)
+
+        X = X / torch.tensor([0.8371, 7.6675, 2.3280, 0.9988, 0.9991])
         return X, Y
 
     # Define utility that generates samples for most gain evaluation
     def generate_most_gain_data(n, most_gain_sample):
-        Y = torch.randn(most_gain_sample, d_Y, n)                             # (most_gain_sample, d_Y, n)
+        Y = 5 * torch.randn(most_gain_sample, d_Y, n)                         # (most_gain_sample, d_Y, n)
         X2 = torch.randn(d_X2, n)                                             # (d_X2, n)
         X2 = X2.unsqueeze(0).repeat(most_gain_sample, 1, 1)                   # (most_gain_sample, d_X2, n)
         XY = torch.cat([Y, X2], dim=1)                                        # (most_gain_sample, d_Z, n)
@@ -48,6 +48,8 @@ def build_data_generator(d_X1, d_X2, d_Y, noise):
         X1 = mu_post + L_post @ torch.randn(most_gain_sample, d_X1, n)        # (most_gain_sample, d_X1, n)
         X1 = X1 + noise * torch.randn(most_gain_sample, d_X1, n)              # (most_gain_sample, d_X1, n)
         X = torch.cat([X1, X2], dim=1).permute(2, 1, 0)                       # (n, d_X1 + d_X2, most_gain_sample)
+
+        X = X / torch.tensor([0.8371, 7.6675, 2.3280, 0.9988, 0.9991]).view(1, -1, 1)
         return X, None
 
     # Define utility that wraps up above
