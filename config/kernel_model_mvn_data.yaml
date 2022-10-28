@@ -5,7 +5,7 @@
 # DATASET
 data:
   # Number of training samples
-  n: 400
+  n: 200
 
   # Dimensionality of X1
   d_X1: 3
@@ -17,7 +17,7 @@ data:
   d_Y: 1
 
   # Standard deviation of noise applied to X1
-  noise: 0.0
+  noise: 0.4
 
   # Proportion of semi-supervised samples (>0)
   semi_prop: 8.
@@ -46,17 +46,17 @@ model:
   # Primary kernel
   k1:
     # RBF lengthscale of k1
-    lengthscale: 1.
+    lengthscale: 8.
 
   # Primary kernel
   k2:
     # RBF lengthscale of k2
-    lengthscale: 1.
+    lengthscale: 8.
 
   # Secondary kernel
   l:
     # RBF lengthscale
-    lengthscale: 1.
+    lengthscale: 8.
 
 
 # EVALUATION

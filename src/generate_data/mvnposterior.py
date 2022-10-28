@@ -31,10 +31,9 @@ def build_data_generator(d_X1, d_X2, d_Y, noise):
         Z = (XY @ R_mat.T)
         mu_post = KX1Z @ torch.cholesky_solve(Z.T, LZZ)
         X1 = mu_post + L_post @ torch.randn(d_X1, n)
-        X1 = X1.T + noise * torch.randn(n, d_X1)
+        # X1 = X1.T + noise * torch.randn(n, d_X1)
+        X1 = X1.T
         X = torch.cat([X1, X2], dim=1)
-
-        X = X / torch.tensor([0.8371, 7.6675, 2.3280, 0.9988, 0.9991])
         return X, Y
 
     # Define utility that generates samples for most gain evaluation
@@ -46,11 +45,13 @@ def build_data_generator(d_X1, d_X2, d_Y, noise):
         Z = (R_mat @ XY)                                                      # (most_gain_sample, d_Z, n)
         mu_post = KX1Z @ torch.cholesky_solve(Z, LZZ)                         # (most_gain_sample, d_X1, n)
         X1 = mu_post + L_post @ torch.randn(most_gain_sample, d_X1, n)        # (most_gain_sample, d_X1, n)
-        X1 = X1 + noise * torch.randn(most_gain_sample, d_X1, n)              # (most_gain_sample, d_X1, n)
+        # X1 = X1 + noise * torch.randn(most_gain_sample, d_X1, n)              # (most_gain_sample, d_X1, n)
         X = torch.cat([X1, X2], dim=1).permute(2, 1, 0)                       # (n, d_X1 + d_X2, most_gain_sample)
-
-        X = X / torch.tensor([0.8371, 7.6675, 2.3280, 0.9988, 0.9991]).view(1, -1, 1)
         return X, None
+
+    # Estimate input covariate standard deviation for standardisation
+    X, _ = generate_data(n=100000)
+    sigma_X = X.std(dim=0)
 
     # Define utility that wraps up above
     def generate(n, seed=None, most_gain=False, most_gain_samples=0):
@@ -58,8 +59,12 @@ def build_data_generator(d_X1, d_X2, d_Y, noise):
             torch.random.manual_seed(seed)
         if most_gain:
             X, Y = generate_most_gain_data(n, most_gain_samples)
+            X = X.div(sigma_X.view(1, -1, 1))
+            X[:, :d_X1, :].add_(noise * torch.randn(n, d_X1, most_gain_samples))
         else:
             X, Y = generate_data(n)
+            X = X.div(sigma_X)
+            X[:, :d_X1].add_(noise * torch.randn(n, d_X1))
         return X, Y
 
     # Return utility for usage
