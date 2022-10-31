@@ -71,4 +71,4 @@ evaluation:
   most_gain: True
 
   # Number of samples for each point to estimate the expectation in most_gain
-  n_gain: 100
+  n_gain: 200
