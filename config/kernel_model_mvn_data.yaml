@@ -1,0 +1,74 @@
+################################################################################
+#   CONFIGURATIONS FOR KERNEL MODEL WITH MVN DATA GENERATING PROCESS
+################################################################################
+
+# DATASET
+data:
+  # Number of training samples
+  n: 200
+
+  # Dimensionality of X1
+  d_X1: 3
+
+  # Dimensionality of X2
+  d_X2: 2
+
+  # Dimensionality of Y
+  d_Y: 1
+
+  # Standard deviation of noise applied to X1
+  noise: 0.4
+
+  # Proportion of semi-supervised samples (>0)
+  semi_prop: 8.
+
+  # Random seed for training set generation
+  seed: 2000
+
+
+# MODEL
+model:
+  # CME estimate
+  cme:
+    # Regularisation weight for CME estimation
+    lbda: 0.5
+
+  # Baseline model
+  baseline:
+    # Regularisation weight for baseline model
+    lbda: 0.001
+
+  # Solving for ERM inside projected RKHS = "project before"
+  project_before:
+    # Regularisation weight for "project before" model
+    lbda: 0.001
+
+  # Primary kernel
+  k1:
+    # RBF lengthscale of k1
+    lengthscale: 8.
+
+  # Primary kernel
+  k2:
+    # RBF lengthscale of k2
+    lengthscale: 8.
+
+  # Secondary kernel
+  l:
+    # RBF lengthscale
+    lengthscale: 8.
+
+
+# EVALUATION
+evaluation:
+  # Number of samples to use for evaluation
+  n_test: 5000
+
+  # Random seed for testing set generation
+  seed: 42
+
+  # Number of samples to estimate the expectation in most_gain
+  most_gain: True
+
+  # Number of samples for each point to estimate the expectation in most_gain
+  n_gain: 200

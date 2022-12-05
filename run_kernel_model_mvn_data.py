@@ -1,12 +1,13 @@
 """
-Description : Runs kernel ridge regression model with polynomial data generating process
+Description : Runs kernel ridge regression model with mvn posterior data generating process
 
-Usage: run_kernel_model_polynomial_data.py  [options] --cfg=<path_to_config> --o=<output_dir>
+Usage: run_kernel_model_mvn_data.py  [options] --cfg=<path_to_config> --o=<output_dir>
 
 Options:
   --cfg=<path_to_config>           Path to YAML configuration file to use.
   --o=<output_dir>                 Output directory.
   --seed=<seed>                    Random seed.
+  --semi_prop=<semi_prop>          Proportion of semi-supervised samples.
   --plot                           Outputs plots.
 """
 import os
@@ -16,14 +17,14 @@ from docopt import docopt
 import torch
 from gpytorch import kernels
 from src.models import KRR
-from src.kernels import ProjectedKernel
-from src.generate_data import make_data, polynomial
+from src.kernels import ProjectedKernel, ConstantKernel
+from src.generate_data import make_data, mvnposterior
 
 
 def main(args, cfg):
     # Create dataset
     logging.info("Loading dataset")
-    data = make_data(cfg=cfg, builder=polynomial.build_data_generator)
+    data = make_data(cfg=cfg, builder=mvnposterior.build_data_generator)
 
     # Instantiate model
     baseline, project_before = make_model(cfg=cfg, data=data)
@@ -31,10 +32,10 @@ def main(args, cfg):
 
     # Fit model
     logging.info("\n Fitting model")
-    baseline, project_before, project_after = fit(baseline=baseline,
-                                                  project_before=project_before,
-                                                  data=data,
-                                                  cfg=cfg)
+    baseline, project_before = fit(baseline=baseline,
+                                   project_before=project_before,
+                                   data=data,
+                                   cfg=cfg)
 
     # Run evaluation
     scores = evaluate(baseline=baseline,
@@ -51,17 +52,21 @@ def main(args, cfg):
 
 def make_model(cfg, data):
     # Instantiate base kernels
-    k = kernels.RBFKernel()
-    l = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xsemitrain.size(1))))
-    k.lengthscale = cfg['model']['k']['lengthscale']
+    k1 = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
+    k2 = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
+    k = k1 * k2
+    l = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
+    k1.kernels[0].lengthscale = cfg['model']['k1']['lengthscale']
+    k2.lengthscale = cfg['model']['k2']['lengthscale']
     l.lengthscale = cfg['model']['l']['lengthscale']
 
     # Precompute kernel matrices
-    K = k(data.Xsemitrain, data.Xsemitrain).evaluate()
-    L = l(data.Xsemitrain, data.Xsemitrain)
-    Lλ = L.add_diag(cfg['model']['cme']['lbda'] * torch.ones(L.shape[0]))
-    chol = torch.linalg.cholesky(Lλ.evaluate())
-    Lλ_inv = torch.cholesky_inverse(chol)
+    with torch.no_grad():
+        K = k(data.Xsemitrain, data.Xsemitrain).evaluate()
+        L = l(data.Xsemitrain, data.Xsemitrain)
+        Lλ = L.add_diag(cfg['model']['cme']['lbda'] * torch.ones(L.shape[0]))
+        chol = torch.linalg.cholesky(Lλ.evaluate())
+        Lλ_inv = torch.cholesky_inverse(chol)
 
     # Instantiate projected kernel
     kP = ProjectedKernel(k, l, data.Xsemitrain, K, Lλ_inv)
@@ -79,7 +84,7 @@ def fit(baseline, project_before, data, cfg):
     return baseline, project_before
 
 
-def evaluate(baseline, project_before, project_after, data, cfg):
+def evaluate(baseline, project_before, data, cfg):
     # Generate samples to evaluate over
     X, Y = data.generate(n=cfg['evaluation']['n_test'],
                          seed=cfg['evaluation']['seed'])
@@ -97,20 +102,23 @@ def evaluate(baseline, project_before, project_after, data, cfg):
         pred_after = pred_baseline - baseline(data.Xsemitrain) @ cme
 
     # Compute MSEs
-    baseline_mse = torch.square(Y - pred_baseline).mean()
-    before_mse = torch.square(Y - pred_before).mean()
-    after_mse = torch.square(Y - pred_after).mean()
+    baseline_mse = torch.square(Y.squeeze() - pred_baseline).mean()
+    before_mse = torch.square(Y.squeeze() - pred_before).mean()
+    after_mse = torch.square(Y.squeeze() - pred_after).mean()
 
     # New most gain
     d = cfg["evaluation"]["n_gain"]
-    X, Y = data.generate(n=cfg['evaluation']['n_test'],
+    X, _ = data.generate(n=cfg['evaluation']['n_test'],
                          seed=cfg['evaluation']['seed'],
-                         most_gain=True, most_gain_samples=d)
-    pred_baseline_avg = torch.zeros_like(Y)
+                         most_gain=True,
+                         most_gain_samples=d)
+    pred_baseline_avg = torch.zeros(X.size(0))
     for i in range(d):
-        pred_slice = baseline(X[:, :, i]).unsqueeze(-1)
+        with torch.no_grad():
+            pred_slice = baseline(X[:, :, i])
         pred_baseline_avg += pred_slice
-    most_gain = torch.square(Y - pred_baseline_avg).mean()
+    pred_baseline_avg = 1 / d * pred_baseline_avg
+    most_gain = torch.square(pred_baseline_avg).mean()
 
     # Make output dict
     output = {'baseline': baseline_mse.item(),
@@ -120,6 +128,15 @@ def evaluate(baseline, project_before, project_after, data, cfg):
     return output
 
 
+def update_cfg(cfg, args):
+    if args['--seed']:
+        cfg['data']['seed'] = int(args['--seed'])
+        cfg['evaluation']['seed'] = int(args['--seed'])
+    if args['--semi_prop']:
+        cfg['data']['semi_prop'] = float(args['--semi_prop'])
+    return cfg
+
+
 if __name__ == "__main__":
     # Read input args
     args = docopt(__doc__)
@@ -127,6 +144,7 @@ if __name__ == "__main__":
     # Load config file
     with open(args['--cfg'], "r") as f:
         cfg = yaml.safe_load(f)
+    cfg = update_cfg(cfg, args)
 
     # Setup logging
     logging.basicConfig(level=logging.INFO)

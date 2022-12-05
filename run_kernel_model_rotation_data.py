@@ -98,7 +98,6 @@ def evaluate(baseline, project_before, data, cfg):
 
         # Project baseline model
         pred_after = pred_baseline - baseline(data.Xsemitrain) @ cme
-        # pred_after = baseline(X) - project_before.kernel(X, project_before.kernel.X) @ project_before.kernel.Lλ_inv @ baseline(project_before.kernel.X)
 
     # Compute MSEs
     baseline_mse = torch.square(Y.squeeze() - pred_baseline).mean()
@@ -107,17 +106,17 @@ def evaluate(baseline, project_before, data, cfg):
 
     # New most gain
     d = cfg["evaluation"]["n_gain"]
-    X, Y = data.generate(n=cfg['evaluation']['n_test'],
+    X, _ = data.generate(n=cfg['evaluation']['n_test'],
                          seed=cfg['evaluation']['seed'],
                          most_gain=True,
                          most_gain_samples=d)
-    pred_baseline_avg = torch.zeros_like(Y)
+    pred_baseline_avg = torch.zeros(X.size(0))
     for i in range(d):
         with torch.no_grad():
-            pred_slice = baseline(X[:, :, i]).unsqueeze(-1)
+            pred_slice = baseline(X[:, :, i])
         pred_baseline_avg += pred_slice
     pred_baseline_avg = 1 / d * pred_baseline_avg
-    most_gain = torch.square(Y - pred_baseline_avg).mean()
+    most_gain = torch.square(pred_baseline_avg).mean()
 
     # Make output dict
     output = {'baseline': baseline_mse.item(),
