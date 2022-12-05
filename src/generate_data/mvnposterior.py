@@ -26,7 +26,7 @@ def build_data_generator(d_X1, d_X2, d_Y, noise):
     # Define utility that generates n samples
     def generate_data(n):
         Y = torch.randn(n, d_Y)
-        X2 = torch.sinc(2 * np.pi * torch.randn(n, d_X2))
+        X2 = torch.randn(n, d_X2)
         XY = torch.cat([Y, X2], dim=1)
         Z = (XY @ R_mat.T)
         mu_post = KX1Z @ torch.cholesky_solve(Z.T, LZZ)
@@ -38,7 +38,7 @@ def build_data_generator(d_X1, d_X2, d_Y, noise):
     # Define utility that generates samples for most gain evaluation
     def generate_most_gain_data(n, most_gain_sample):
         Y = torch.randn(most_gain_sample, d_Y, n)                             # (most_gain_sample, d_Y, n)
-        X2 = torch.sinc(2 * np.pi * torch.randn(d_X2, n))                                             # (d_X2, n)
+        X2 = torch.randn(d_X2, n)                                             # (d_X2, n)
         X2 = X2.unsqueeze(0).repeat(most_gain_sample, 1, 1)                   # (most_gain_sample, d_X2, n)
         XY = torch.cat([Y, X2], dim=1)                                        # (most_gain_sample, d_Z, n)
         Z = (R_mat @ XY)                                                      # (most_gain_sample, d_Z, n)
