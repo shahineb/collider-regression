@@ -4,7 +4,7 @@ from scipy.spatial.transform import Rotation as R
 import numpy as np
 
 
-def build_data_generator(d_X1, d_X2, d_Y, noise):
+def build_data_generator(d_X1, d_X2, d_Y, noise, **kwargs):
     # Initialise rotation matrix
     R_mat = (R.from_rotvec(np.pi / 3 * np.array([1, 1, 1]))).as_matrix()
     R_mat = torch.as_tensor(R_mat).float()

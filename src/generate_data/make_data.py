@@ -9,6 +9,10 @@ field_names = ['generate',
                'd_X1',
                'd_X2',
                'd_Y',
+               'mu_X',
+               'sigma_X',
+               'mu_Y',
+               'sigma_Y',
                'seed']
 Data = namedtuple(typename='Data', field_names=field_names, defaults=(None,) * len(field_names))
 
@@ -27,10 +31,7 @@ def make_data(cfg, builder):
         type: Data
     """
     # Instantiate synthetic data generator
-    data_generator = builder(d_X1=cfg['data']['d_X1'],
-                             d_X2=cfg['data']['d_X2'],
-                             d_Y=cfg['data']['d_Y'],
-                             noise=cfg['data']['noise'])
+    data_generator = builder(**cfg['data'])
 
     # Extract useful variables from config
     n = cfg['data']['n']
@@ -45,11 +46,19 @@ def make_data(cfg, builder):
     Xtrain, Ytrain = X[:n], Y[:n]
     Xsemitrain = X
 
+    # Compute means and stddevs
+    mu_X, sigma_X = X.mean(dim=0), X.std(dim=0)
+    mu_Y, sigma_Y = Y.mean(), Y.std()
+
     # Encapsulate into named tuple object
     kwargs = {'generate': data_generator,
               'Xtrain': Xtrain,
               'Ytrain': Ytrain,
               'Xsemitrain': Xsemitrain,
+              'mu_X': mu_X,
+              'sigma_X': sigma_X,
+              'mu_Y': mu_Y,
+              'sigma_Y': sigma_Y,
               'd_X1': cfg['data']['d_X1'],
               'd_X2': cfg['data']['d_X2'],
               'd_Y': cfg['data']['d_Y'],

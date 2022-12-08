@@ -5,7 +5,7 @@ from fair.RCPs import rcp45
 import src.generate_data.fair as fair
 
 
-def build_data_generator(noise):
+def build_data_generator(noise, **kwargs):
     # Initialise FaIR
     base_kwargs = fair.get_params()
     forcings_stddevs = np.array([1.46985971, 0.17249708, 0.01918899, 0.00458906])

@@ -1,7 +1,7 @@
 import torch
 
 
-def build_data_generator(d_X1, d_X2, d_Y, noise):
+def build_data_generator(d_X1, d_X2, d_Y, noise, **kwargs):
     # Initialise transition matrices
     X2_X1 = torch.ones((d_X1, d_X2)) / (d_X1 * d_X2)
     Y_X1 = torch.ones((d_X1, d_Y)) / (d_X1 * d_Y)
