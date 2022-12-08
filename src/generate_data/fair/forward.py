@@ -30,6 +30,7 @@ def _run(
     f3,
     d,
     q,
+    forcing_noise,
     ext_forcing,
     timestep,
     **kwargs
@@ -111,6 +112,7 @@ def _run(
         RF[..., i] = tools.step_forcing(
             C=C[..., i], PI_conc=PI_conc, f1=f1, f2=f2, f3=f3
         )
+        RF[..., i] = RF[..., i] + forcing_noise * np.random.randn(*RF[..., i].shape)
         S[i], T[i] = tools.step_temperature(
             S_old=S[max(i - 1, 0)], F=np.sum(RF[..., i], axis=0) + ext_forcing[i], q=q, d=d, dt=tstep
         )
