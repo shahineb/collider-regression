@@ -7,7 +7,8 @@ Options:
   --cfg=<path_to_config>           Path to YAML configuration file to use.
   --o=<output_dir>                 Output directory [default: data/FaIR/].
   --seed=<seed>                    Random seed.
-"""
+  --val                            If True, also generates a validation set.
+ """
 import os
 import yaml
 import logging
@@ -17,7 +18,6 @@ from src.generate_data import FaIR
 
 
 def main(args, cfg):
-    print(cfg)
     # Instantiate data generator
     data_generator = FaIR.build_data_generator(noise=cfg['train']['noise'])
 
@@ -29,7 +29,18 @@ def main(args, cfg):
     # Dump training set
     torch.save(Xtrain, os.path.join(args['--o'], 'Xtrain.pt'))
     torch.save(Ytrain, os.path.join(args['--o'], 'Ytrain.pt'))
-    logging.info(f"\n Dumped training set in {args['--o']}")
+    logging.info(f"\n Dumped training set under {args['--o']}")
+
+    if args['--val']:
+        # Create validation dataset
+        logging.info("Generating validation set")
+        Xtest, Ytest = data_generator(n=cfg['val']['size'],
+                                      seed=cfg['val']['seed'])
+
+        # Dump validation set
+        torch.save(Xtest, os.path.join(args['--o'], 'Xval.pt'))
+        torch.save(Ytest, os.path.join(args['--o'], 'Yval.pt'))
+        logging.info(f"\n Dumped validation set under {args['--o']}")
 
     # Create test dataset
     logging.info("Generating testing set")
@@ -39,13 +50,14 @@ def main(args, cfg):
     # Dump test set
     torch.save(Xtest, os.path.join(args['--o'], 'Xtest.pt'))
     torch.save(Ytest, os.path.join(args['--o'], 'Ytest.pt'))
-    logging.info(f"\n Dumped testing set in {args['--o']}")
+    logging.info(f"\n Dumped testing set under {args['--o']}")
 
 
 def update_cfg(cfg, args):
     if args['--seed']:
         cfg['train']['seed'] = int(args['--seed'])
-        cfg['test']['seed'] = int(args['--seed']) + 1
+        cfg['val']['seed'] = int(args['--seed']) + 1
+        cfg['test']['seed'] = int(args['--seed']) + 2
     return cfg
 
 

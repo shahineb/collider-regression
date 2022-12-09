@@ -14,6 +14,14 @@ train:
   seed: 5
 
 
+# VALIDATION SET
+val:
+  # Size of dataset
+  size: 100
+
+  # Random seed
+  seed: 7
+
 
 # TESTING SET
 test:
