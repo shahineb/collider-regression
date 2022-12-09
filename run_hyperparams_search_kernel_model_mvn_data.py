@@ -17,9 +17,9 @@ from tqdm import tqdm
 import torch
 from gpytorch import kernels
 import linear_operator
-from src.generate_data import make_data, rotation
+from src.generate_data import make_data, mvnposterior
 from src.models import KRR
-from src.kernels import ProjectedKernel
+from src.kernels import ProjectedKernel, ConstantKernel
 from src.evaluation.metrics import spearman_correlation
 from utils import product_dict, flatten_dict_as_str
 
@@ -77,11 +77,14 @@ def main(args, cfg):
 def run_baseline(cfg, hyperparams):
     # Create dataset
     cfg['data']['seed'] = hyperparams['seed']
-    data = make_data(cfg=cfg, builder=rotation.build_data_generator)
+    data = make_data(cfg=cfg, builder=mvnposterior.build_data_generator)
 
     # Instantiate base kernels
-    k = kernels.RBFKernel()
-    k.lengthscale = hyperparams['k_lengthscale']
+    k1 = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
+    k2 = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
+    k = k1 * k2
+    k1.kernels[0].lengthscale = cfg['model']['k1']['lengthscale']
+    k2.lengthscale = cfg['model']['k2']['lengthscale']
 
     # Instantiate regressors
     baseline = KRR(kernel=k, λ=hyperparams['lbda_krr'])
@@ -111,13 +114,16 @@ def run_baseline(cfg, hyperparams):
 def run_before(cfg, hyperparams):
     # Create dataset
     cfg['data']['seed'] = hyperparams['seed']
-    data = make_data(cfg=cfg, builder=rotation.build_data_generator)
+    data = make_data(cfg=cfg, builder=mvnposterior.build_data_generator)
 
     # Instantiate base kernels
-    k = kernels.RBFKernel()
-    l = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xsemitrain.size(1))))
-    k.lengthscale = hyperparams['k_lengthscale']
-    l.lengthscale = hyperparams['l_lengthscale']
+    k1 = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
+    k2 = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
+    k = k1 * k2
+    l = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
+    k1.kernels[0].lengthscale = cfg['model']['k1']['lengthscale']
+    k2.lengthscale = cfg['model']['k2']['lengthscale']
+    l.lengthscale = cfg['model']['l']['lengthscale']
 
     # Precompute kernel matrices
     K = k(data.Xsemitrain, data.Xsemitrain).evaluate()
@@ -157,13 +163,16 @@ def run_before(cfg, hyperparams):
 def run_after(cfg, hyperparams):
     # Create dataset
     cfg['data']['seed'] = hyperparams['seed']
-    data = make_data(cfg=cfg, builder=rotation.build_data_generator)
+    data = make_data(cfg=cfg, builder=mvnposterior.build_data_generator)
 
     # Instantiate base kernels
-    k = kernels.RBFKernel()
-    l = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xsemitrain.size(1))))
-    k.lengthscale = hyperparams['k_lengthscale']
-    l.lengthscale = hyperparams['l_lengthscale']
+    k1 = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
+    k2 = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
+    k = k1 * k2
+    l = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
+    k1.kernels[0].lengthscale = cfg['model']['k1']['lengthscale']
+    k2.lengthscale = cfg['model']['k2']['lengthscale']
+    l.lengthscale = cfg['model']['l']['lengthscale']
 
     # Precompute kernel matrices
     L = l(data.Xsemitrain, data.Xsemitrain)
