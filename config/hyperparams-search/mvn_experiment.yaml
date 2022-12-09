@@ -1,5 +1,5 @@
 ################################################################################
-#   CONFIGURATIONS OF HYPERPARAMS GRID SEARCH FOR KERNEL MODEL WITH ROTATION DATA GENERATING PROCESS
+#   CONFIGURATIONS OF HYPERPARAMS GRID SEARCH FOR KERNEL MODEL WITH MVN DATA GENERATING PROCESS
 ################################################################################
 
 
@@ -17,11 +17,11 @@ data:
   # Dimensionality of Y
   d_Y: 1
 
-  # Standard deviation of noise applied to X1
-  noise: 0.4
+  # Standard deviation of noise applied to forcing
+  noise: 0.1
 
   # Proportion of semi-supervised samples (>0)
-  semi_prop: 8
+  semi_prop: 1.
 
 
 
