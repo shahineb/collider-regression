@@ -1,7 +1,7 @@
 """
-Description : Runs kernel ridge regression model with mvn posterior data generating process
+Description : Runs kernel ridge regression model with FaIR emulator data
 
-Usage: run_kernel_model_mvn_data.py  [options] --cfg=<path_to_config> --o=<output_dir>
+Usage: run_FaIR_experiment.py  [options] --cfg=<path_to_config> --o=<output_dir>
 
 Options:
   --cfg=<path_to_config>           Path to YAML configuration file to use.
@@ -18,13 +18,13 @@ import torch
 from gpytorch import kernels
 from src.models import KRR
 from src.kernels import ProjectedKernel, ConstantKernel
-from src.generate_data import make_data, mvnposterior
+from src import generate_data
 
 
 def main(args, cfg):
     # Create dataset
-    logging.info("Loading dataset")
-    data = make_data(cfg=cfg, builder=mvnposterior.build_data_generator)
+    logging.info("Generating dataset")
+    data = make_data(cfg=cfg)
 
     # Instantiate model
     baseline, project_before = make_model(cfg=cfg, data=data)
@@ -50,6 +50,23 @@ def main(args, cfg):
     logging.info(f"\n Dumped scores at {dump_path}")
 
 
+def make_data(cfg):
+    # Define data generator builder that loads pre-generated datasets and shuffles them
+    def build_data_generator(Xtrain_path, Ytrain_path, **kwargs):
+        def generate(n, seed=None):
+            if seed:
+                torch.random.manual_seed(seed)
+            X = torch.load(Xtrain_path)
+            Y = torch.load(Ytrain_path)
+            rdm_idx = torch.randperm(len(X))
+            X = X[rdm_idx]
+            Y = Y[rdm_idx]
+            return X, Y
+        return generate
+    data = generate_data.make_data(cfg=cfg, builder=build_data_generator)
+    return data
+
+
 def make_model(cfg, data):
     # Instantiate base kernels
     k1 = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
@@ -62,14 +79,15 @@ def make_model(cfg, data):
 
     # Precompute kernel matrices
     with torch.no_grad():
-        K = k(data.Xsemitrain, data.Xsemitrain).evaluate()
-        L = l(data.Xsemitrain, data.Xsemitrain)
+        Xsemitrain = (data.Xsemitrain - data.mu_X) / data.sigma_X
+        K = k(Xsemitrain, Xsemitrain).evaluate()
+        L = l(Xsemitrain, Xsemitrain)
         Lλ = L.add_diag(cfg['model']['cme']['lbda'] * torch.ones(L.shape[0]))
         chol = torch.linalg.cholesky(Lλ.evaluate())
         Lλ_inv = torch.cholesky_inverse(chol)
 
     # Instantiate projected kernel
-    kP = ProjectedKernel(k, l, data.Xsemitrain, K, Lλ_inv)
+    kP = ProjectedKernel(k, l, Xsemitrain, K, Lλ_inv)
 
     # Instantiate regressors
     baseline = KRR(kernel=k, λ=cfg['model']['baseline']['lbda'])
@@ -79,15 +97,20 @@ def make_model(cfg, data):
 
 def fit(baseline, project_before, data, cfg):
     # Fit baseline and "project before" model
-    baseline.fit(data.Xtrain, data.Ytrain)
-    project_before.fit(data.Xtrain, data.Ytrain)
+    Xtrain = (data.Xtrain - data.mu_X) / data.sigma_X
+    Ytrain = (data.Ytrain - data.mu_Y) / data.sigma_Y
+    baseline.fit(Xtrain, Ytrain)
+    project_before.fit(Xtrain, Ytrain)
     return baseline, project_before
 
 
 def evaluate(baseline, project_before, data, cfg):
-    # Generate samples to evaluate over
-    X, Y = data.generate(n=cfg['evaluation']['n_test'],
-                         seed=cfg['evaluation']['seed'])
+    # Load samples to evaluate over
+    logging.info("\n Loading testing set")
+    X = torch.load(cfg['evaluation']['Xtest_path'])
+    Y = torch.load(cfg['evaluation']['Ytest_path'])
+    X = (X - data.mu_X) / data.sigma_X
+    Xsemitrain = (data.Xsemitrain - data.mu_X) / data.sigma_X
 
     # Run prediction
     with torch.no_grad():
@@ -96,35 +119,25 @@ def evaluate(baseline, project_before, data, cfg):
 
         # Compute CMEs on test set
         Lλ_inv = project_before.kernel.Lλ_inv
-        cme = Lλ_inv @ project_before.kernel.l(data.Xsemitrain, X).evaluate()
+        cme = Lλ_inv @ project_before.kernel.l(Xsemitrain, X).evaluate()
 
         # Project baseline model
-        pred_after = pred_baseline - baseline(data.Xsemitrain) @ cme
+        pred_after = pred_baseline - baseline(Xsemitrain) @ cme
+
+        # Unstandardize predictions
+        pred_baseline = data.sigma_Y * pred_baseline + data.mu_Y
+        pred_before = data.sigma_Y * pred_before + data.mu_Y
+        pred_after = data.sigma_Y * pred_after + data.mu_Y
 
     # Compute MSEs
     baseline_mse = torch.square(Y.squeeze() - pred_baseline).mean()
     before_mse = torch.square(Y.squeeze() - pred_before).mean()
     after_mse = torch.square(Y.squeeze() - pred_after).mean()
 
-    # New most gain
-    d = cfg["evaluation"]["n_gain"]
-    X, _ = data.generate(n=cfg['evaluation']['n_test'],
-                         seed=cfg['evaluation']['seed'],
-                         most_gain=True,
-                         most_gain_samples=d)
-    pred_baseline_avg = torch.zeros(X.size(0))
-    for i in range(d):
-        with torch.no_grad():
-            pred_slice = baseline(X[:, :, i])
-        pred_baseline_avg += pred_slice
-    pred_baseline_avg = 1 / d * pred_baseline_avg
-    most_gain = torch.square(pred_baseline_avg).mean()
-
     # Make output dict
     output = {'baseline': baseline_mse.item(),
               'before': before_mse.item(),
-              'after': after_mse.item(),
-              'most_gain': most_gain.item()}
+              'after': after_mse.item()}
     return output
 
 

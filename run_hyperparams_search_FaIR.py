@@ -1,7 +1,7 @@
 """
-Description : Runs hyperparameter search for kernel ridge regression model with rotation data generating process
+Description : Runs hyperparameter search for kernel ridge regression model with FaIR data generating process
 
-Usage: run_hyperparams_search_kernel_model_rotation_data.py  [options] --cfg=<path_to_config> --o=<output_dir>
+Usage: run_hyperparams_search_FaIR.py  [options] --cfg=<path_to_config> --o=<output_dir>
 
 Options:
   --cfg=<path_to_config>           Path to YAML configuration file to use.
@@ -17,10 +17,10 @@ from tqdm import tqdm
 import torch
 from gpytorch import kernels
 import linear_operator
-from src.generate_data import make_data, mvnposterior
 from src.models import KRR
 from src.kernels import ProjectedKernel, ConstantKernel
 from src.evaluation.metrics import spearman_correlation
+from run_FaIR_experiment import make_data
 from utils import product_dict, flatten_dict_as_str
 
 
@@ -77,7 +77,7 @@ def main(args, cfg):
 def run_baseline(cfg, hyperparams):
     # Create dataset
     cfg['data']['seed'] = hyperparams['seed']
-    data = make_data(cfg=cfg, builder=mvnposterior.build_data_generator)
+    data = make_data(cfg=cfg)
 
     # Instantiate base kernels
     k1 = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
@@ -90,11 +90,15 @@ def run_baseline(cfg, hyperparams):
     baseline = KRR(kernel=k, λ=hyperparams['lbda_krr'])
 
     # Fit model
-    baseline.fit(data.Xtrain, data.Ytrain)
+    Xtrain = (data.Xtrain - data.mu_X) / data.sigma_X
+    Ytrain = (data.Ytrain - data.mu_Y) / data.sigma_Y
+    baseline.fit(Xtrain, Ytrain)
 
-    # Generate samples to evaluate over
-    X, Y = data.generate(n=cfg['evaluation']['n_test'],
-                         seed=hyperparams['seed'])
+    # Load samples to evaluate over
+    X = torch.load(cfg['evaluation']['Xval_path'])
+    Y = torch.load(cfg['evaluation']['Yval_path'])
+    X = (X - data.mu_X) / data.sigma_X
+    Y = (Y - data.mu_Y) / data.sigma_Y
 
     # Run prediction
     with torch.no_grad():
@@ -114,7 +118,7 @@ def run_baseline(cfg, hyperparams):
 def run_before(cfg, hyperparams):
     # Create dataset
     cfg['data']['seed'] = hyperparams['seed']
-    data = make_data(cfg=cfg, builder=mvnposterior.build_data_generator)
+    data = make_data(cfg=cfg)
 
     # Instantiate base kernels
     k1 = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
@@ -126,24 +130,29 @@ def run_before(cfg, hyperparams):
     l.lengthscale = cfg['model']['l']['lengthscale']
 
     # Precompute kernel matrices
-    K = k(data.Xsemitrain, data.Xsemitrain).evaluate()
-    L = l(data.Xsemitrain, data.Xsemitrain)
+    Xsemitrain = (data.Xsemitrain - data.mu_X) / data.sigma_X
+    K = k(Xsemitrain, Xsemitrain).evaluate()
+    L = l(Xsemitrain, Xsemitrain)
     Lλ = L.add_diag(hyperparams['lbda_cme'] * torch.ones(L.shape[0]))
     chol = torch.linalg.cholesky(Lλ.evaluate())
     Lλ_inv = torch.cholesky_inverse(chol)
 
     # Instantiate projected kernel
-    kP = ProjectedKernel(k, l, data.Xsemitrain, K, Lλ_inv)
+    kP = ProjectedKernel(k, l, Xsemitrain, K, Lλ_inv)
 
     # Instantiate regressors
     project_before = KRR(kernel=kP, λ=hyperparams['lbda_krr'])
 
     # Fit model
-    project_before.fit(data.Xtrain, data.Ytrain)
+    Xtrain = (data.Xtrain - data.mu_X) / data.sigma_X
+    Ytrain = (data.Ytrain - data.mu_Y) / data.sigma_Y
+    project_before.fit(Xtrain, Ytrain)
 
-    # Generate samples to evaluate over
-    X, Y = data.generate(n=cfg['evaluation']['n_test'],
-                         seed=hyperparams['seed'])
+    # Load samples to evaluate over
+    X = torch.load(cfg['evaluation']['Xval_path'])
+    Y = torch.load(cfg['evaluation']['Yval_path'])
+    X = (X - data.mu_X) / data.sigma_X
+    Y = (Y - data.mu_Y) / data.sigma_Y
 
     # Run prediction
     with torch.no_grad():
@@ -163,7 +172,7 @@ def run_before(cfg, hyperparams):
 def run_after(cfg, hyperparams):
     # Create dataset
     cfg['data']['seed'] = hyperparams['seed']
-    data = make_data(cfg=cfg, builder=mvnposterior.build_data_generator)
+    data = make_data(cfg=cfg)
 
     # Instantiate base kernels
     k1 = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
@@ -175,7 +184,8 @@ def run_after(cfg, hyperparams):
     l.lengthscale = cfg['model']['l']['lengthscale']
 
     # Precompute kernel matrices
-    L = l(data.Xsemitrain, data.Xsemitrain)
+    Xsemitrain = (data.Xsemitrain - data.mu_X) / data.sigma_X
+    L = l(Xsemitrain, Xsemitrain)
     Lλ = L.add_diag(hyperparams['lbda_cme'] * torch.ones(L.shape[0]))
     chol = torch.linalg.cholesky(Lλ.evaluate())
 
@@ -183,11 +193,15 @@ def run_after(cfg, hyperparams):
     baseline = KRR(kernel=k, λ=hyperparams['lbda_krr'])
 
     # Fit model
-    baseline.fit(data.Xtrain, data.Ytrain)
+    Xtrain = (data.Xtrain - data.mu_X) / data.sigma_X
+    Ytrain = (data.Ytrain - data.mu_Y) / data.sigma_Y
+    baseline.fit(Xtrain, Ytrain)
 
-    # Generate samples to evaluate over
-    X, Y = data.generate(n=cfg['evaluation']['n_test'],
-                         seed=hyperparams['seed'])
+    # Load samples to evaluate over
+    X = torch.load(cfg['evaluation']['Xval_path'])
+    Y = torch.load(cfg['evaluation']['Yval_path'])
+    X = (X - data.mu_X) / data.sigma_X
+    Y = (Y - data.mu_Y) / data.sigma_Y
 
     # Run prediction
     with torch.no_grad():

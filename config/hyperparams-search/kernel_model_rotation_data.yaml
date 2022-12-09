@@ -48,7 +48,14 @@ search:
       - 11
 
     # Lengthscale of primary kernel
-    k_lengthscale:
+    k1_lengthscale:
+      - 1.
+      - 2.
+      - 4.
+      - 8.
+
+    # Lengthscale of primary kernel
+    k2_lengthscale:
       - 1.
       - 2.
       - 4.
@@ -73,7 +80,14 @@ search:
       - 11
 
     # Lengthscale of primary kernel
-    k_lengthscale:
+    k1_lengthscale:
+      - 1.
+      - 2.
+      - 4.
+      - 8.
+
+    # Lengthscale of primary kernel
+    k2_lengthscale:
       - 1.
       - 2.
       - 4.
@@ -112,12 +126,18 @@ search:
       - 11
 
     # Lengthscale of primary kernel
-    k_lengthscale:
+    k1_lengthscale:
       - 1.
       - 2.
       - 4.
       - 8.
 
+    # Lengthscale of primary kernel
+    k2_lengthscale:
+      - 1.
+      - 2.
+      - 4.
+      - 8.
     # Lengthscale of secondary kernel
     l_lengthscale:
       - 1.
