@@ -7,6 +7,12 @@ data:
   # Number of training samples
   n: 200
 
+  # Path to Xtrain torch tensor file to sample training set from
+  Xtrain_path: data/FaIR/Xtrain.pt
+
+  # Path to Ytrain torch tensor file to sample training set from
+  Ytrain_path: data/FaIR/Ytrain.pt
+
   # Dimensionality of X1
   d_X1: 1
 
