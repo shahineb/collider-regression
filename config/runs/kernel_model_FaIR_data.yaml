@@ -5,7 +5,7 @@
 # DATASET
 data:
   # Number of training samples
-  n: 100
+  n: 200
 
   # Dimensionality of X1
   d_X1: 1
