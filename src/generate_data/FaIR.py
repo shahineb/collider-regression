@@ -48,6 +48,7 @@ def build_data_generator(noise, **kwargs):
     def generate(n, seed=None, most_gain=False, most_gain_samples=0):
         if seed:
             torch.random.manual_seed(seed)
+            np.random.seed(seed)
         if most_gain:
             raise NotImplementedError
         else:

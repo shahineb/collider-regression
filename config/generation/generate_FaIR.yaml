@@ -1,0 +1,24 @@
+################################################################################
+#   CONFIGURATIONS FOR GENERATING FaIR DATA
+################################################################################
+
+# TRAINING SET
+train:
+  # Size of dataset
+  size: 5000
+
+  # Noise level applied to forcing
+  noise: 0.1
+
+  # Random seed
+  seed: 5
+
+
+
+# TESTING SET
+test:
+  # Size of dataset
+  size: 5000
+
+  # Random seed
+  seed: 6

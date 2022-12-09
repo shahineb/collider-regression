@@ -1,26 +1,26 @@
 ################################################################################
-#   CONFIGURATIONS FOR KERNEL MODEL WITH LINEAR DATA GENERATING PROCESS
+#   CONFIGURATIONS FOR KERNEL MODEL WITH FaIR DATA GENERATING PROCESS
 ################################################################################
 
 # DATASET
 data:
   # Number of training samples
-  n: 200
+  n: 100
 
   # Dimensionality of X1
-  d_X1: 3
+  d_X1: 1
 
   # Dimensionality of X2
-  d_X2: 2
+  d_X2: 1
 
   # Dimensionality of Y
   d_Y: 1
 
-  # Standard deviation of noise applied to X1
-  noise: 0.4
+  # Standard deviation of noise applied to forcing
+  noise: 0.1
 
   # Proportion of semi-supervised samples (>0)
-  semi_prop: 8
+  semi_prop: 1.
 
   # Random seed for training set generation
   seed: 2000
@@ -31,7 +31,7 @@ model:
   # CME estimate
   cme:
     # Regularisation weight for CME estimation
-    lbda: 1.
+    lbda: 0.5
 
   # Baseline model
   baseline:
@@ -46,29 +46,23 @@ model:
   # Primary kernel
   k1:
     # RBF lengthscale of k1
-    lengthscale: 8.
+    lengthscale: 5.
 
   # Primary kernel
   k2:
     # RBF lengthscale of k2
-    lengthscale: 8.
+    lengthscale: 5.
 
   # Secondary kernel
   l:
     # RBF lengthscale
-    lengthscale: 8.
+    lengthscale: 5.
 
 
 # EVALUATION
 evaluation:
-  # Number of samples to use for evaluation
-  n_test: 5000
+  # Path to Xtest torch tensor file to use for evaluation
+  Xtest_path: data/FaIR/Xtest.pt
 
-  # Random seed for testing set generation
-  seed: 42
-
-  # Number of samples to estimate the expectation in most_gain
-  most_gain: True
-
-  # Number of samples for each point to estimate the expectation in most_gain
-  n_gain: 100
+  # Path to Ytest torch tensor file to use for evaluation
+  Ytest_path: data/FaIR/Ytest.pt

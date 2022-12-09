@@ -44,7 +44,7 @@ def make_data(cfg, builder):
     # Generate dataset and split into supervised and semi-supervised
     X, Y = data_generator(n=m, seed=seed)
     Xtrain, Ytrain = X[:n], Y[:n]
-    Xsemitrain = X
+    Xsemitrain = X[:m]
 
     # Compute means and stddevs
     mu_X, sigma_X = X.mean(dim=0), X.std(dim=0)

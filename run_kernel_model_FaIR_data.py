@@ -18,13 +18,13 @@ import torch
 from gpytorch import kernels
 from src.models import KRR
 from src.kernels import ProjectedKernel, ConstantKernel
-from src.generate_data import make_data, FaIR
+from src import generate_data
 
 
 def main(args, cfg):
     # Create dataset
     logging.info("Generating dataset")
-    data = make_data(cfg=cfg, builder=FaIR.build_data_generator)
+    data = make_data(cfg=cfg)
 
     # Instantiate model
     baseline, project_before = make_model(cfg=cfg, data=data)
@@ -48,6 +48,23 @@ def main(args, cfg):
     with open(dump_path, 'w') as f:
         yaml.dump(scores, f)
     logging.info(f"\n Dumped scores at {dump_path}")
+
+
+def make_data(cfg):
+    # Define data generator builder that loads pre-generated datasets and shuffles them
+    def build_data_generator(Xtrain_path, Ytrain_path, **kwargs):
+        def generate(n, seed=None):
+            if seed:
+                torch.random.manual_seed(seed)
+            X = torch.load(Xtrain_path)
+            Y = torch.load(Ytrain_path)
+            rdm_idx = torch.randperm(len(X))
+            X = X[rdm_idx]
+            Y = Y[rdm_idx]
+            return X, Y
+        return generate
+    data = generate_data.make_data(cfg=cfg, builder=build_data_generator)
+    return data
 
 
 def make_model(cfg, data):
@@ -88,12 +105,11 @@ def fit(baseline, project_before, data, cfg):
 
 
 def evaluate(baseline, project_before, data, cfg):
-    # Generate samples to evaluate over
-    logging.info("\n Generating testing set")
-    X, Y = data.generate(n=cfg['evaluation']['n_test'],
-                         seed=cfg['evaluation']['seed'])
+    # Load samples to evaluate over
+    logging.info("\n Loading testing set")
+    X = torch.load(cfg['evaluation']['Xtest_path'])
+    Y = torch.load(cfg['evaluation']['Ytest_path'])
     X = (X - data.mu_X) / data.sigma_X
-    Y = (Y - data.mu_Y) / data.sigma_Y
     Xsemitrain = (data.Xsemitrain - data.mu_X) / data.sigma_X
 
     # Run prediction
@@ -107,6 +123,11 @@ def evaluate(baseline, project_before, data, cfg):
 
         # Project baseline model
         pred_after = pred_baseline - baseline(Xsemitrain) @ cme
+
+        # Unstandardize predictions
+        pred_baseline = data.sigma_Y * pred_baseline + data.mu_Y
+        pred_before = data.sigma_Y * pred_before + data.mu_Y
+        pred_after = data.sigma_Y * pred_after + data.mu_Y
 
     # Compute MSEs
     baseline_mse = torch.square(Y.squeeze() - pred_baseline).mean()
