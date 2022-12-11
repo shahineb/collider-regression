@@ -110,6 +110,7 @@ def evaluate(baseline, project_before, data, cfg):
     X = torch.load(cfg['evaluation']['Xtest_path'])
     Y = torch.load(cfg['evaluation']['Ytest_path'])
     X = (X - data.mu_X) / data.sigma_X
+    Y = (Y - data.mu_Y) / data.sigma_Y
     Xsemitrain = (data.Xsemitrain - data.mu_X) / data.sigma_X
 
     # Run prediction
@@ -125,9 +126,9 @@ def evaluate(baseline, project_before, data, cfg):
         pred_after = pred_baseline - baseline(Xsemitrain) @ cme
 
         # Unstandardize predictions
-        pred_baseline = data.sigma_Y * pred_baseline + data.mu_Y
-        pred_before = data.sigma_Y * pred_before + data.mu_Y
-        pred_after = data.sigma_Y * pred_after + data.mu_Y
+        # pred_baseline = data.sigma_Y * pred_baseline + data.mu_Y
+        # pred_before = data.sigma_Y * pred_before + data.mu_Y
+        # pred_after = data.sigma_Y * pred_after + data.mu_Y
 
     # Compute MSEs
     baseline_mse = torch.square(Y.squeeze() - pred_baseline).mean()

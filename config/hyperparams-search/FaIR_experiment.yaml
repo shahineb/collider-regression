@@ -8,6 +8,12 @@ data:
   # Number of training samples
   n: 200
 
+  # Path to Xtrain torch tensor file to sample training set from
+  Xtrain_path: data/FaIR/Xtrain.pt
+
+  # Path to Ytrain torch tensor file to sample training set from
+  Ytrain_path: data/FaIR/Ytrain.pt
+
   # Dimensionality of X1
   d_X1: 1
 
@@ -18,17 +24,21 @@ data:
   d_Y: 1
 
   # Standard deviation of noise applied to X1
-  noise: 0.4
+  noise: 0.1
 
-  # Proportion of semi-supervised samples (>0)
-  semi_prop: 8
+  # Proportion of semi-supervised samples (added on top of train samples -- 1 = 100%)
+  semi_prop: 1
 
 
 
 # EVALUATION
 evaluation:
-  # Number of samples to use for evaluation
-  n_test: 5000
+  # Path to Xval torch tensor file to validate over
+  Xval_path: data/FaIR/Xval.pt
+
+  # Path to Yval torch tensor file to validate over
+  Yval_path: data/FaIR/Yval.pt
+
 
 
 
@@ -49,6 +59,7 @@ search:
 
     # Lengthscale of primary kernel
     k1_lengthscale:
+      - 0.5
       - 1.
       - 2.
       - 4.
@@ -56,6 +67,7 @@ search:
 
     # Lengthscale of primary kernel
     k2_lengthscale:
+      - 0.5
       - 1.
       - 2.
       - 4.
@@ -63,10 +75,11 @@ search:
 
     # KRR regularisation
     lbda_krr:
-      - 0.1
       - 0.01
-      - 0.001
-      - 0.0001
+      - 0.1
+      - 0.5
+      - 1.
+      - 2.
 
 
   # Search grid for "project before" model
@@ -81,6 +94,7 @@ search:
 
     # Lengthscale of primary kernel
     k1_lengthscale:
+      - 0.5
       - 1.
       - 2.
       - 4.
@@ -88,6 +102,7 @@ search:
 
     # Lengthscale of primary kernel
     k2_lengthscale:
+      - 0.5
       - 1.
       - 2.
       - 4.
@@ -95,6 +110,7 @@ search:
 
     # Lengthscale of secondary kernel
     l_lengthscale:
+      - 0.5
       - 1.
       - 2.
       - 4.
@@ -102,16 +118,19 @@ search:
 
     # KRR regularisation
     lbda_krr:
-      - 0.1
       - 0.01
-      - 0.001
-      - 0.0001
+      - 0.1
+      - 0.5
+      - 1.
+      - 2.
 
     # CME regularisation
     lbda_cme:
       - 0.01
       - 0.1
+      - 0.5
       - 1.
+      - 2.
 
 
 
@@ -127,19 +146,24 @@ search:
 
     # Lengthscale of primary kernel
     k1_lengthscale:
+      - 0.5
       - 1.
       - 2.
       - 4.
       - 8.
 
+
     # Lengthscale of primary kernel
     k2_lengthscale:
+      - 0.5
       - 1.
       - 2.
       - 4.
       - 8.
+
     # Lengthscale of secondary kernel
     l_lengthscale:
+      - 0.5
       - 1.
       - 2.
       - 4.
@@ -148,13 +172,16 @@ search:
 
     # KRR regularisation
     lbda_krr:
-      - 0.1
       - 0.01
-      - 0.001
-      - 0.0001
+      - 0.1
+      - 0.5
+      - 1.
+      - 2.
 
     # CME regularisation
     lbda_cme:
       - 0.01
       - 0.1
+      - 0.5
       - 1.
+      - 2.

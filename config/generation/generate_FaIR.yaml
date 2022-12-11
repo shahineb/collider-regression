@@ -17,10 +17,10 @@ train:
 # VALIDATION SET
 val:
   # Size of dataset
-  size: 100
+  size: 200
 
   # Random seed
-  seed: 7
+  seed: 6
 
 
 # TESTING SET
@@ -29,4 +29,4 @@ test:
   size: 5000
 
   # Random seed
-  seed: 6
+  seed: 7

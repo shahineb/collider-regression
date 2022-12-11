@@ -83,8 +83,8 @@ def run_baseline(cfg, hyperparams):
     k1 = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
     k2 = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
     k = k1 * k2
-    k1.kernels[0].lengthscale = cfg['model']['k1']['lengthscale']
-    k2.lengthscale = cfg['model']['k2']['lengthscale']
+    k1.kernels[0].lengthscale = hyperparams['k1_lengthscale']
+    k2.lengthscale = hyperparams['k2_lengthscale']
 
     # Instantiate regressors
     baseline = KRR(kernel=k, λ=hyperparams['lbda_krr'])
@@ -125,9 +125,9 @@ def run_before(cfg, hyperparams):
     k2 = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
     k = k1 * k2
     l = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
-    k1.kernels[0].lengthscale = cfg['model']['k1']['lengthscale']
-    k2.lengthscale = cfg['model']['k2']['lengthscale']
-    l.lengthscale = cfg['model']['l']['lengthscale']
+    k1.kernels[0].lengthscale = hyperparams['k1_lengthscale']
+    k2.lengthscale = hyperparams['k2_lengthscale']
+    l.lengthscale = hyperparams['l_lengthscale']
 
     # Precompute kernel matrices
     Xsemitrain = (data.Xsemitrain - data.mu_X) / data.sigma_X
@@ -179,9 +179,9 @@ def run_after(cfg, hyperparams):
     k2 = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
     k = k1 * k2
     l = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
-    k1.kernels[0].lengthscale = cfg['model']['k1']['lengthscale']
-    k2.lengthscale = cfg['model']['k2']['lengthscale']
-    l.lengthscale = cfg['model']['l']['lengthscale']
+    k1.kernels[0].lengthscale = hyperparams['k1_lengthscale']
+    k2.lengthscale = hyperparams['k2_lengthscale']
+    l.lengthscale = hyperparams['l_lengthscale']
 
     # Precompute kernel matrices
     Xsemitrain = (data.Xsemitrain - data.mu_X) / data.sigma_X

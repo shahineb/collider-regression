@@ -123,7 +123,7 @@ def run_before(cfg, hyperparams):
     l = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
     k1.kernels[0].lengthscale = hyperparams['k1_lengthscale']
     k2.lengthscale = hyperparams['k2_lengthscale']
-    l.lengthscale = cfg['model']['l_lengthscale']
+    l.lengthscale = hyperparams['l_lengthscale']
 
     # Precompute kernel matrices
     K = k(data.Xsemitrain, data.Xsemitrain).evaluate()
@@ -172,7 +172,7 @@ def run_after(cfg, hyperparams):
     l = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
     k1.kernels[0].lengthscale = hyperparams['k1_lengthscale']
     k2.lengthscale = hyperparams['k2_lengthscale']
-    l.lengthscale = cfg['model']['l_lengthscale']
+    l.lengthscale = hyperparams['l_lengthscale']
 
     # Precompute kernel matrices
     L = l(data.Xsemitrain, data.Xsemitrain)
