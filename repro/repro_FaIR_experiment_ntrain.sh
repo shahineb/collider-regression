@@ -17,12 +17,16 @@ CFG=config/runs/FaIR_experiment.yaml
 
 
 # Define output directories path variables
-OUTDIR=experiments/data/outputs/seeds/FaIR_experiment
+OUTDIR=experiments/data/outputs/n_train/FaIR_experiment
 
 
 # Run experiments for multiple seeds
-for SEED in {1..100};
+for SEED in {1..40};
 do
-  DIRNAME=seed_$SEED
-  python run_FaIR_experiment.py --cfg=$CFG --o=$OUTDIR/$DIRNAME --seed=$SEED
+  for NTRAIN in 10 20 40 60 80 100 150 200;
+  do
+    DIRNAME=seed_$SEED
+    DIRNAME+=_n_$NTRAIN
+    python run_FaIR_experiment.py --cfg=$CFG --o=$OUTDIR/$DIRNAME --seed=$SEED --n=$NTRAIN
+  done
 done

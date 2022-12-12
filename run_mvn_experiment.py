@@ -7,6 +7,7 @@ Options:
   --cfg=<path_to_config>           Path to YAML configuration file to use.
   --o=<output_dir>                 Output directory.
   --seed=<seed>                    Random seed.
+  --n=<n_train>                    Number of training samples.
   --semi_prop=<semi_prop>          Proportion of semi-supervised samples.
   --plot                           Outputs plots.
 """
@@ -132,6 +133,8 @@ def update_cfg(cfg, args):
     if args['--seed']:
         cfg['data']['seed'] = int(args['--seed'])
         cfg['evaluation']['seed'] = int(args['--seed'])
+    if args['--n']:
+        cfg['data']['n'] = int(args['--n'])
     if args['--semi_prop']:
         cfg['data']['semi_prop'] = float(args['--semi_prop'])
     return cfg
