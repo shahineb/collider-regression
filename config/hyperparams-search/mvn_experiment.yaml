@@ -18,10 +18,10 @@ data:
   d_Y: 1
 
   # Standard deviation of noise applied to forcing
-  noise: 0.1
+  noise: 0.4
 
-  # Proportion of semi-supervised samples (>0)
-  semi_prop: 1.
+  # Proportion of semi-supervised samples (added on top of train samples -- 1 = 100%)
+  semi_prop: 8.
 
 
 

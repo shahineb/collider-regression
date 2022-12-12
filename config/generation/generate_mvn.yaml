@@ -1,0 +1,41 @@
+################################################################################
+#   CONFIGURATIONS FOR GENERATING MVN DATA
+################################################################################
+
+# TRAINING SET
+train:
+  # Size of dataset
+  size: 5000
+
+  # Dimensionality of X1
+  d_X1: 3
+
+  # Dimensionality of X2
+  d_X2: 2
+
+  # Dimensionality of Y
+  d_Y: 1
+
+  # Standard deviation of noise applied to X1
+  noise: 0.4
+
+  # Random seed
+  seed: 5
+
+
+# VALIDATION SET
+val:
+  # Size of dataset
+  size: 1000
+
+  # Random seed
+  seed: 6
+
+
+# TESTING SET
+test:
+  # Size of dataset
+  size: 5000
+
+  # Random seed
+  seed: 7

@@ -23,7 +23,7 @@ data:
   # Dimensionality of Y
   d_Y: 1
 
-  # Standard deviation of noise applied to X1
+  # Standard deviation of noise applied to forcing
   noise: 0.1
 
   # Proportion of semi-supervised samples (added on top of train samples -- 1 = 100%)
