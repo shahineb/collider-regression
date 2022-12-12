@@ -61,13 +61,13 @@ def main(args, cfg):
         return iteration
 
     # Parallelise grid search
-    baseline_iteration = build_iteration(run_baseline, 'baseline')
-    Parallel(n_jobs=cfg['search']['n_jobs'])(delayed(baseline_iteration)(hyperparams)
-                                             for hyperparams in tqdm(hyperparams_baseline_grid))
-
-    before_iteration = build_iteration(run_before, 'before')
-    Parallel(n_jobs=cfg['search']['n_jobs'])(delayed(before_iteration)(hyperparams)
-                                             for hyperparams in tqdm(hyperparams_before_grid))
+    # baseline_iteration = build_iteration(run_baseline, 'baseline')
+    # Parallel(n_jobs=cfg['search']['n_jobs'])(delayed(baseline_iteration)(hyperparams)
+    #                                          for hyperparams in tqdm(hyperparams_baseline_grid))
+    #
+    # before_iteration = build_iteration(run_before, 'before')
+    # Parallel(n_jobs=cfg['search']['n_jobs'])(delayed(before_iteration)(hyperparams)
+    #                                          for hyperparams in tqdm(hyperparams_before_grid))
 
     after_iteration = build_iteration(run_after, 'after')
     Parallel(n_jobs=cfg['search']['n_jobs'])(delayed(after_iteration)(hyperparams)
@@ -206,8 +206,8 @@ def run_after(cfg, hyperparams):
     # Run prediction
     with torch.no_grad():
         pred_baseline = baseline(X)
-        cme = torch.cholesky_solve(l(data.Xsemitrain, X).evaluate(), chol)
-        pred_after = pred_baseline - baseline(data.Xsemitrain) @ cme
+        cme = torch.cholesky_solve(l(Xsemitrain, X).evaluate(), chol)
+        pred_after = pred_baseline - baseline(Xsemitrain) @ cme
 
     # Compute scores
     Y = Y.squeeze()

@@ -17,7 +17,7 @@ train:
 # VALIDATION SET
 val:
   # Size of dataset
-  size: 200
+  size: 1000
 
   # Random seed
   seed: 6

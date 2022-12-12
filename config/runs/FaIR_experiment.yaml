@@ -37,7 +37,7 @@ model:
   # CME estimate
   cme:
     # Regularisation weight for CME estimation
-    lbda: 0.5
+    lbda: 0.01
 
   # Baseline model
   baseline:
@@ -52,17 +52,17 @@ model:
   # Primary kernel
   k1:
     # RBF lengthscale of k1
-    lengthscale: 5.
+    lengthscale: 8.
 
   # Primary kernel
   k2:
     # RBF lengthscale of k2
-    lengthscale: 5.
+    lengthscale: 8.
 
   # Secondary kernel
   l:
     # RBF lengthscale
-    lengthscale: 5.
+    lengthscale: 6.
 
 
 # EVALUATION
