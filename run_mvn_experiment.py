@@ -1,5 +1,5 @@
 """
-Description : Runs kernel ridge regression model with mvn posterior data generating process
+Description : Runs kernel ridge regression model with mvn data generating process
 
 Usage: run_mvn_experiment.py  [options] --cfg=<path_to_config> --o=<output_dir>
 
@@ -19,13 +19,13 @@ import torch
 from gpytorch import kernels
 from src.models import KRR
 from src.kernels import ProjectedKernel, ConstantKernel
-from src.generate_data import make_data, mvnposterior
+from src.generate_data import make_data, mvn
 
 
 def main(args, cfg):
     # Create dataset
     logging.info("Loading dataset")
-    data = make_data(cfg=cfg, builder=mvnposterior.build_data_generator)
+    data = make_data(cfg=cfg, builder=mvn.build_data_generator)
 
     # Instantiate model
     baseline, project_before = make_model(cfg=cfg, data=data)
@@ -107,25 +107,10 @@ def evaluate(baseline, project_before, data, cfg):
     before_mse = torch.square(Y.squeeze() - pred_before).mean()
     after_mse = torch.square(Y.squeeze() - pred_after).mean()
 
-    # New most gain
-    d = cfg["evaluation"]["n_gain"]
-    X, _ = data.generate(n=cfg['evaluation']['n_test'],
-                         seed=cfg['evaluation']['seed'],
-                         most_gain=True,
-                         most_gain_samples=d)
-    pred_baseline_avg = torch.zeros(X.size(0))
-    for i in range(d):
-        with torch.no_grad():
-            pred_slice = baseline(X[:, :, i])
-        pred_baseline_avg += pred_slice
-    pred_baseline_avg = 1 / d * pred_baseline_avg
-    most_gain = torch.square(pred_baseline_avg).mean()
-
     # Make output dict
     output = {'baseline': baseline_mse.item(),
               'before': before_mse.item(),
-              'after': after_mse.item(),
-              'most_gain': most_gain.item()}
+              'after': after_mse.item()}
     return output
 
 

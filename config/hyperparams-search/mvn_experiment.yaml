@@ -9,26 +9,26 @@ data:
   n: 200
 
   # Dimensionality of X1
-  d_X1: 3
+  d_X1: 4
 
   # Dimensionality of X2
-  d_X2: 2
+  d_X2: 4
 
   # Dimensionality of Y
   d_Y: 1
 
   # Standard deviation of noise applied to forcing
-  noise: 0.4
+  noise: 0.1
 
   # Proportion of semi-supervised samples (added on top of train samples -- 1 = 100%)
-  semi_prop: 8.
+  semi_prop: 1.
 
 
 
 # EVALUATION
 evaluation:
-  # Number of samples to use for evaluation
-  n_test: 5000
+  # Number of samples to use for validation
+  n_test: 1000
 
 
 
@@ -63,10 +63,10 @@ search:
 
     # KRR regularisation
     lbda_krr:
+      - 1.
       - 0.1
       - 0.01
       - 0.001
-      - 0.0001
 
 
   # Search grid for "project before" model
@@ -102,10 +102,10 @@ search:
 
     # KRR regularisation
     lbda_krr:
+      - 1.
       - 0.1
       - 0.01
       - 0.001
-      - 0.0001
 
     # CME regularisation
     lbda_cme:
@@ -148,10 +148,10 @@ search:
 
     # KRR regularisation
     lbda_krr:
+      - 1.
       - 0.1
       - 0.01
       - 0.001
-      - 0.0001
 
     # CME regularisation
     lbda_cme:

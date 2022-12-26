@@ -1,9 +1,9 @@
 import torch
-import numpy as np
 
 
 def build_data_generator(d_X1, d_X2, noise, **kwargs):
     # Initialise covariance matrix
+    torch.random.manual_seed(2000)
     M = torch.randn(d_X1 + d_X2 + 1, d_X1 + d_X2 + 1)
     M = M.div(M.norm(dim=0))
     MY = M[:, -1:]
@@ -32,6 +32,7 @@ def build_data_generator(d_X1, d_X2, noise, **kwargs):
         raise NotImplementedError
 
     # Estimate means and standard deviation for standardisation
+    torch.random.manual_seed(2000)
     X, Y = generate_data(n=100000)
     mu_X, sigma_X = X.mean(dim=0), X.std(dim=0)
     mu_Y, sigma_Y = Y.mean(), Y.std()
@@ -50,7 +51,6 @@ def build_data_generator(d_X1, d_X2, noise, **kwargs):
         else:
             X, Y = generate_data(n)
             X, Y = standardize(X, Y)
-            X[:, :d_X1].add_(noise * torch.randn(n, d_X1))
         return X, Y
 
     # Return utility for usage

@@ -17,7 +17,7 @@ from tqdm import tqdm
 import torch
 from gpytorch import kernels
 import linear_operator
-from src.generate_data import make_data, mvnposterior
+from src.generate_data import make_data, mvn
 from src.models import KRR
 from src.kernels import ProjectedKernel, ConstantKernel
 from src.evaluation.metrics import spearman_correlation
@@ -77,7 +77,7 @@ def main(args, cfg):
 def run_baseline(cfg, hyperparams):
     # Create dataset
     cfg['data']['seed'] = hyperparams['seed']
-    data = make_data(cfg=cfg, builder=mvnposterior.build_data_generator)
+    data = make_data(cfg=cfg, builder=mvn.build_data_generator)
 
     # Instantiate base kernels
     k1 = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
@@ -114,7 +114,7 @@ def run_baseline(cfg, hyperparams):
 def run_before(cfg, hyperparams):
     # Create dataset
     cfg['data']['seed'] = hyperparams['seed']
-    data = make_data(cfg=cfg, builder=mvnposterior.build_data_generator)
+    data = make_data(cfg=cfg, builder=mvn.build_data_generator)
 
     # Instantiate base kernels
     k1 = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
@@ -163,7 +163,7 @@ def run_before(cfg, hyperparams):
 def run_after(cfg, hyperparams):
     # Create dataset
     cfg['data']['seed'] = hyperparams['seed']
-    data = make_data(cfg=cfg, builder=mvnposterior.build_data_generator)
+    data = make_data(cfg=cfg, builder=mvn.build_data_generator)
 
     # Instantiate base kernels
     k1 = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
