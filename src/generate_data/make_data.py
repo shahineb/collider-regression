@@ -1,5 +1,6 @@
 from collections import namedtuple
 from math import floor
+import torch
 
 
 field_names = ['generate',
@@ -35,16 +36,18 @@ def make_data(cfg, builder):
 
     # Extract useful variables from config
     n = cfg['data']['n']
-    semi_prop = cfg['data']['semi_prop']
+    m = cfg['data']['semi_prop']
     seed = cfg['data']['seed']
 
-    # Augment number of samples by semi-supervised proporition
-    m = floor(n * (1 + semi_prop))
-
     # Generate dataset and split into supervised and semi-supervised
-    X, Y = data_generator(n=m, seed=seed)
-    Xtrain, Ytrain = X[:n], Y[:n]
-    Xsemitrain = X[:m]
+    Xtrain, Ytrain = data_generator(n=n, seed=seed)
+    if m == 0:
+        Xsemitrain = Xtrain
+        X, Y = Xtrain, Ytrain
+    else:
+        Xsemitrain, _ = data_generator(n=m, seed=seed)
+        Xsemitrain = torch.cat([Xtrain, Xsemitrain])
+        X, Y = Xsemitrain, Ytrain
 
     # Compute means and stddevs
     mu_X, sigma_X = X.mean(dim=0), X.std(dim=0)

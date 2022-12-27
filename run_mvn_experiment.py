@@ -9,6 +9,7 @@ Options:
   --seed=<seed>                    Random seed.
   --n=<n_train>                    Number of training samples.
   --semi_prop=<semi_prop>          Proportion of semi-supervised samples.
+  --d_X2=<d_X2>                    Dimension of X2.
   --plot                           Outputs plots.
 """
 import os
@@ -121,7 +122,9 @@ def update_cfg(cfg, args):
     if args['--n']:
         cfg['data']['n'] = int(args['--n'])
     if args['--semi_prop']:
-        cfg['data']['semi_prop'] = float(args['--semi_prop'])
+        cfg['data']['semi_prop'] = int(args['--semi_prop'])
+    if args['--d_X2']:
+        cfg['data']['d_X2'] = int(args['--d_X2'])
     return cfg
 
 

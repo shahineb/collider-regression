@@ -9,10 +9,10 @@ data:
   n: 200
 
   # Dimensionality of X1
-  d_X1: 4
+  d_X1: 3
 
   # Dimensionality of X2
-  d_X2: 4
+  d_X2: 3
 
   # Dimensionality of Y
   d_Y: 1
@@ -88,17 +88,11 @@ search:
 
     # Lengthscale of primary kernel
     k2_lengthscale:
-      - 1.
-      - 2.
       - 4.
-      - 8.
 
     # Lengthscale of secondary kernel
     l_lengthscale:
-      - 1.
-      - 2.
       - 4.
-      - 8.
 
     # KRR regularisation
     lbda_krr:
@@ -109,9 +103,7 @@ search:
 
     # CME regularisation
     lbda_cme:
-      - 0.01
-      - 0.1
-      - 1.
+      - 0.05
 
 
 
@@ -134,17 +126,11 @@ search:
 
     # Lengthscale of primary kernel
     k2_lengthscale:
-      - 1.
-      - 2.
       - 4.
-      - 8.
+
     # Lengthscale of secondary kernel
     l_lengthscale:
-      - 1.
-      - 2.
       - 4.
-      - 8.
-
 
     # KRR regularisation
     lbda_krr:
@@ -155,6 +141,4 @@ search:
 
     # CME regularisation
     lbda_cme:
-      - 0.01
-      - 0.1
-      - 1.
+      - 0.05

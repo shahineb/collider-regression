@@ -1,17 +1,24 @@
 import torch
+from math import pi
 
 
-def build_data_generator(d_X1, d_X2, noise, **kwargs):
+def build_data_generator(d_X1, d_X2, noise, d_X2_max=8, **kwargs):
     # Initialise covariance matrix
     torch.random.manual_seed(2000)
-    M = torch.randn(d_X1 + d_X2 + 1, d_X1 + d_X2 + 1)
+    M = torch.randn(4, d_X1 + d_X2_max + 1)
     M = M.div(M.norm(dim=0))
+    idx = torch.cat([torch.arange(d_X1 + d_X2), torch.tensor([M.size(1) - 1])])
+    M = M[:, idx]
+
     MY = M[:, -1:]
     M2 = M[:, d_X1:d_X1 + d_X2]
-    M[:, d_X1:d_X1 + d_X2] = M2 - (M2.T @ MY).T * MY.repeat(1, d_X2)
-    Sigma = M.T @ M
+    proj = (M2.T @ MY).T * MY.repeat(1, d_X2)
+    M[:, d_X1:d_X1 + d_X2] = M2 - proj
+
+    Sigma = M.T @ M + 0.01 * torch.eye(d_X1 + d_X2 + 1)
     rootinvDiagSigma = torch.diag(1 / torch.sqrt(Sigma.diag()))
     Sigma = rootinvDiagSigma @ Sigma @ rootinvDiagSigma
+    Sigma[Sigma.abs() < torch.finfo(torch.float32).eps] = 0
 
     # Initialise mvn distribution
     mvn = torch.distributions.MultivariateNormal(loc=torch.zeros(d_X1 + d_X2 + 1),
@@ -21,9 +28,9 @@ def build_data_generator(d_X1, d_X2, noise, **kwargs):
     def generate_data(n):
         Z = mvn.sample((n,))
         X1, X2, Y = Z[:, :d_X1], Z[:, d_X1:d_X1 + d_X2], Z[:, -1:]
+        X1 = X1 + 0.1 * torch.cos(2 * pi * X1**2)
+        X2 = X2 + 0.1 * torch.sin(2 * pi * X2**2)
         X1 = X1.add(noise * torch.randn_like(X1))
-        X2 = torch.sinh(X2)
-        Y = torch.sinh(Y)
         X = torch.cat([X1, X2], dim=1)
         return X, Y
 

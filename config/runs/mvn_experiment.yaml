@@ -8,10 +8,10 @@ data:
   n: 50
 
   # Dimensionality of X1
-  d_X1: 4
+  d_X1: 3
 
   # Dimensionality of X2
-  d_X2: 4
+  d_X2: 3
 
   # Dimensionality of Y
   d_Y: 1
@@ -19,8 +19,8 @@ data:
   # Standard deviation of noise applied to X1
   noise: 0.1
 
-  # Proportion of semi-supervised samples (>0)
-  semi_prop: 1.
+  # Number of semi-supervised samples
+  semi_prop: 100
 
   # Random seed for training set generation
   seed: 2000
@@ -31,7 +31,7 @@ model:
   # CME estimate
   cme:
     # Regularisation weight for CME estimation
-    lbda: 0.5
+    lbda: 1.
 
   # Baseline model
   baseline:
@@ -46,17 +46,17 @@ model:
   # Primary kernel
   k1:
     # RBF lengthscale of k1
-    lengthscale: 4.
+    lengthscale: 8.
 
   # Primary kernel
   k2:
     # RBF lengthscale of k2
-    lengthscale: 4.
+    lengthscale: 2.
 
   # Secondary kernel
   l:
     # RBF lengthscale
-    lengthscale: 4.
+    lengthscale: 2.
 
 
 # EVALUATION
