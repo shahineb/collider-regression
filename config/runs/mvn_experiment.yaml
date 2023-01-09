@@ -70,5 +70,8 @@ evaluation:
   # Number of samples to estimate the expectation in most_gain
   most_gain: True
 
+  # Number of points to use to estimate most gain
+  n_test_gain: 400
+
   # Number of samples for each point to estimate the expectation in most_gain
   n_gain: 200

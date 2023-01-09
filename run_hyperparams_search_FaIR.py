@@ -61,13 +61,13 @@ def main(args, cfg):
         return iteration
 
     # Parallelise grid search
-    # baseline_iteration = build_iteration(run_baseline, 'baseline')
-    # Parallel(n_jobs=cfg['search']['n_jobs'])(delayed(baseline_iteration)(hyperparams)
-    #                                          for hyperparams in tqdm(hyperparams_baseline_grid))
-    #
-    # before_iteration = build_iteration(run_before, 'before')
-    # Parallel(n_jobs=cfg['search']['n_jobs'])(delayed(before_iteration)(hyperparams)
-    #                                          for hyperparams in tqdm(hyperparams_before_grid))
+    baseline_iteration = build_iteration(run_baseline, 'baseline')
+    Parallel(n_jobs=cfg['search']['n_jobs'])(delayed(baseline_iteration)(hyperparams)
+                                             for hyperparams in tqdm(hyperparams_baseline_grid))
+
+    before_iteration = build_iteration(run_before, 'before')
+    Parallel(n_jobs=cfg['search']['n_jobs'])(delayed(before_iteration)(hyperparams)
+                                             for hyperparams in tqdm(hyperparams_before_grid))
 
     after_iteration = build_iteration(run_after, 'after')
     Parallel(n_jobs=cfg['search']['n_jobs'])(delayed(after_iteration)(hyperparams)
@@ -90,15 +90,15 @@ def run_baseline(cfg, hyperparams):
     baseline = KRR(kernel=k, λ=hyperparams['lbda_krr'])
 
     # Fit model
-    Xtrain = (data.Xtrain - data.mu_X) / data.sigma_X
-    Ytrain = (data.Ytrain - data.mu_Y) / data.sigma_Y
+    Xtrain = (data.Xtrain - data.mu_X)
+    Ytrain = (data.Ytrain - data.mu_Y)
     baseline.fit(Xtrain, Ytrain)
 
     # Load samples to evaluate over
     X = torch.load(cfg['evaluation']['Xval_path'])
     Y = torch.load(cfg['evaluation']['Yval_path'])
-    X = (X - data.mu_X) / data.sigma_X
-    Y = (Y - data.mu_Y) / data.sigma_Y
+    X = (X - data.mu_X)
+    Y = (Y - data.mu_Y)
 
     # Run prediction
     with torch.no_grad():
@@ -130,7 +130,7 @@ def run_before(cfg, hyperparams):
     l.lengthscale = hyperparams['l_lengthscale']
 
     # Precompute kernel matrices
-    Xsemitrain = (data.Xsemitrain - data.mu_X) / data.sigma_X
+    Xsemitrain = (data.Xsemitrain - data.mu_X)
     K = k(Xsemitrain, Xsemitrain).evaluate()
     L = l(Xsemitrain, Xsemitrain)
     Lλ = L.add_diag(hyperparams['lbda_cme'] * torch.ones(L.shape[0]))
@@ -144,15 +144,15 @@ def run_before(cfg, hyperparams):
     project_before = KRR(kernel=kP, λ=hyperparams['lbda_krr'])
 
     # Fit model
-    Xtrain = (data.Xtrain - data.mu_X) / data.sigma_X
-    Ytrain = (data.Ytrain - data.mu_Y) / data.sigma_Y
+    Xtrain = (data.Xtrain - data.mu_X)
+    Ytrain = (data.Ytrain - data.mu_Y)
     project_before.fit(Xtrain, Ytrain)
 
     # Load samples to evaluate over
     X = torch.load(cfg['evaluation']['Xval_path'])
     Y = torch.load(cfg['evaluation']['Yval_path'])
-    X = (X - data.mu_X) / data.sigma_X
-    Y = (Y - data.mu_Y) / data.sigma_Y
+    X = (X - data.mu_X)
+    Y = (Y - data.mu_Y)
 
     # Run prediction
     with torch.no_grad():
@@ -184,7 +184,7 @@ def run_after(cfg, hyperparams):
     l.lengthscale = hyperparams['l_lengthscale']
 
     # Precompute kernel matrices
-    Xsemitrain = (data.Xsemitrain - data.mu_X) / data.sigma_X
+    Xsemitrain = (data.Xsemitrain - data.mu_X)
     L = l(Xsemitrain, Xsemitrain)
     Lλ = L.add_diag(hyperparams['lbda_cme'] * torch.ones(L.shape[0]))
     chol = torch.linalg.cholesky(Lλ.evaluate())
@@ -193,15 +193,15 @@ def run_after(cfg, hyperparams):
     baseline = KRR(kernel=k, λ=hyperparams['lbda_krr'])
 
     # Fit model
-    Xtrain = (data.Xtrain - data.mu_X) / data.sigma_X
-    Ytrain = (data.Ytrain - data.mu_Y) / data.sigma_Y
+    Xtrain = (data.Xtrain - data.mu_X)
+    Ytrain = (data.Ytrain - data.mu_Y)
     baseline.fit(Xtrain, Ytrain)
 
     # Load samples to evaluate over
     X = torch.load(cfg['evaluation']['Xval_path'])
     Y = torch.load(cfg['evaluation']['Yval_path'])
-    X = (X - data.mu_X) / data.sigma_X
-    Y = (Y - data.mu_Y) / data.sigma_Y
+    X = (X - data.mu_X)
+    Y = (Y - data.mu_Y)
 
     # Run prediction
     with torch.no_grad():

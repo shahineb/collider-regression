@@ -6,6 +6,7 @@
 train:
   # Size of dataset
   size: 5000
+  # size: 200
 
   # Noise level applied to forcing
   noise: 0.1
@@ -27,6 +28,7 @@ val:
 test:
   # Size of dataset
   size: 5000
+  # size: 600
 
   # Random seed
   seed: 7

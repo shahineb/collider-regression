@@ -8,10 +8,7 @@ import src.generate_data.fair as fair
 def build_data_generator(noise, **kwargs):
     # Initialise FaIR
     base_kwargs = fair.get_params()
-    # forcings_stddevs = np.array([1.46985971, 0.17249708, 0.01918899, 0.00458906])
-    forcings_stddevs = np.array([14.6985971, 0.17249708, 19.18899, 0.00458906])
-    f2 = np.array([0., 0., -0.126, 0.00302])
-    base_kwargs.update(forcing_noise=noise * forcings_stddevs, f2=f2)
+    base_kwargs.update(forcing_noise=noise * np.array([1., 0., 1., 1.]), f2=base_kwargs['f2'])
     years = rcp45.Emissions.year
     emissions = rcp45.Emissions.emissions[:, [1, 3, 5, 9]].T
 
@@ -20,7 +17,7 @@ def build_data_generator(noise, **kwargs):
         res = fair.run(time=years,
                        emission=emissions,
                        base_kwargs=base_kwargs)
-        year_idx = 258  # year = 2023
+        year_idx = 255  # year = 2020
         Fco2 = res['RF'][0, year_idx]
         Faer = res['RF'][2:, year_idx].sum(axis=0)
         T = res['T'][year_idx]

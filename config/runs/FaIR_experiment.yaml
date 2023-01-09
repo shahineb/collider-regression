@@ -5,7 +5,7 @@
 # DATASET
 data:
   # Number of training samples
-  n: 200
+  n: 50
 
   # Path to Xtrain torch tensor file to sample training set from
   Xtrain_path: data/FaIR/Xtrain.pt
@@ -26,7 +26,7 @@ data:
   noise: 0.1
 
   # Proportion of semi-supervised samples (>0)
-  semi_prop: 1.
+  semi_prop: 200
 
   # Random seed for training set generation
   seed: 2000
@@ -37,32 +37,32 @@ model:
   # CME estimate
   cme:
     # Regularisation weight for CME estimation
-    lbda: 0.01
+    lbda: 0.1
 
   # Baseline model
   baseline:
     # Regularisation weight for baseline model
-    lbda: 0.001
+    lbda: 0.0001
 
   # Solving for ERM inside projected RKHS = "project before"
   project_before:
     # Regularisation weight for "project before" model
-    lbda: 0.001
+    lbda: 0.0001
 
   # Primary kernel
   k1:
     # RBF lengthscale of k1
-    lengthscale: 8.
+    lengthscale: 0.5
 
   # Primary kernel
   k2:
     # RBF lengthscale of k2
-    lengthscale: 8.
+    lengthscale: 3.
 
   # Secondary kernel
   l:
     # RBF lengthscale
-    lengthscale: 6.
+    lengthscale: 2.
 
 
 # EVALUATION
