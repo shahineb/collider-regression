@@ -1,0 +1,74 @@
+################################################################################
+#   CONFIGURATIONS FOR KERNEL MODEL WITH FaIR DATA GENERATING PROCESS
+################################################################################
+
+# DATASET
+data:
+  # Number of training samples
+  n: 50
+
+  # Path to Xtrain torch tensor file to sample training set from
+  Xtrain_path: data/FaIR/Xtrain.pt
+
+  # Path to Ytrain torch tensor file to sample training set from
+  Ytrain_path: data/FaIR/Ytrain.pt
+
+  # Dimensionality of X1
+  d_X1: 1
+
+  # Dimensionality of X2
+  d_X2: 1
+
+  # Dimensionality of Y
+  d_Y: 1
+
+  # Standard deviation of noise applied to forcing
+  noise: 0.1
+
+  # Proportion of semi-supervised samples (>0)
+  semi_prop: 200
+
+  # Random seed for training set generation
+  seed: 2000
+
+
+# MODEL
+model:
+  # CME estimate
+  cme:
+    # Regularisation weight for CME estimation
+    lbda: 0.1
+
+  # Baseline model
+  baseline:
+    # Regularisation weight for baseline model
+    lbda: 0.0001
+
+  # Solving for ERM inside projected RKHS = "project before"
+  project_before:
+    # Regularisation weight for "project before" model
+    lbda: 0.0001
+
+  # Primary kernel
+  k1:
+    # RBF lengthscale of k1
+    lengthscale: 0.5
+
+  # Primary kernel
+  k2:
+    # RBF lengthscale of k2
+    lengthscale: 3.
+
+  # Secondary kernel
+  l:
+    # RBF lengthscale
+    lengthscale: 2.
+
+
+# EVALUATION
+evaluation:
+  # Path to Xtest torch tensor file to use for evaluation
+  Xtest_path: data/FaIR/Xtest.pt
+
+  # Path to Ytest torch tensor file to use for evaluation
+  Ytest_path: data/FaIR/Ytest.pt

@@ -1,0 +1,144 @@
+################################################################################
+#   CONFIGURATIONS OF HYPERPARAMS GRID SEARCH FOR KERNEL MODEL WITH MVN DATA GENERATING PROCESS
+################################################################################
+
+
+# DATASET
+data:
+  # Number of training samples
+  n: 200
+
+  # Dimensionality of X1
+  d_X1: 3
+
+  # Dimensionality of X2
+  d_X2: 3
+
+  # Dimensionality of Y
+  d_Y: 1
+
+  # Standard deviation of noise applied to forcing
+  noise: 0.1
+
+  # Proportion of semi-supervised samples (added on top of train samples -- 1 = 100%)
+  semi_prop: 1.
+
+
+
+# EVALUATION
+evaluation:
+  # Number of samples to use for validation
+  n_test: 1000
+
+
+
+# GRID SEARCH
+search:
+  # Number of cores for search parallelisation
+  n_jobs: 4
+
+  # Search grid for baseline model
+  baseline_grid:
+    # Seed for data generation
+    seed:
+      - 2
+      - 3
+      - 5
+      - 7
+      - 11
+
+    # Lengthscale of primary kernel
+    k1_lengthscale:
+      - 1.
+      - 2.
+      - 4.
+      - 8.
+
+    # Lengthscale of primary kernel
+    k2_lengthscale:
+      - 1.
+      - 2.
+      - 4.
+      - 8.
+
+    # KRR regularisation
+    lbda_krr:
+      - 1.
+      - 0.1
+      - 0.01
+      - 0.001
+
+
+  # Search grid for "project before" model
+  before_grid:
+    # Seed for data generation
+    seed:
+      - 2
+      - 3
+      - 5
+      - 7
+      - 11
+
+    # Lengthscale of primary kernel
+    k1_lengthscale:
+      - 1.
+      - 2.
+      - 4.
+      - 8.
+
+    # Lengthscale of primary kernel
+    k2_lengthscale:
+      - 4.
+
+    # Lengthscale of secondary kernel
+    l_lengthscale:
+      - 4.
+
+    # KRR regularisation
+    lbda_krr:
+      - 1.
+      - 0.1
+      - 0.01
+      - 0.001
+
+    # CME regularisation
+    lbda_cme:
+      - 0.05
+
+
+
+  # Search grid for "project after" model
+  after_grid:
+    # Seed for data generation
+    seed:
+      - 2
+      - 3
+      - 5
+      - 7
+      - 11
+
+    # Lengthscale of primary kernel
+    k1_lengthscale:
+      - 1.
+      - 2.
+      - 4.
+      - 8.
+
+    # Lengthscale of primary kernel
+    k2_lengthscale:
+      - 4.
+
+    # Lengthscale of secondary kernel
+    l_lengthscale:
+      - 4.
+
+    # KRR regularisation
+    lbda_krr:
+      - 1.
+      - 0.1
+      - 0.01
+      - 0.001
+
+    # CME regularisation
+    lbda_cme:
+      - 0.05
