@@ -1,4 +1,4 @@
-# rkhs-collider
+# collider-regression
 
 
 ## Running a grid search experiment
