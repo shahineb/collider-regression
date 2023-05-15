@@ -80,11 +80,11 @@ def run_baseline(cfg, hyperparams):
     data = make_data(cfg=cfg, builder=mvn.build_data_generator)
 
     # Instantiate base kernels
-    k1 = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
-    k2 = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
-    k = k1 * k2
-    k1.kernels[0].lengthscale = hyperparams['k1_lengthscale']
-    k2.lengthscale = hyperparams['k2_lengthscale']
+    r_plus = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
+    l = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
+    k = r_plus * l
+    r_plus.kernels[0].lengthscale = hyperparams['r_lengthscale']
+    l.lengthscale = hyperparams['l_lengthscale']
 
     # Instantiate regressors
     baseline = KRR(kernel=k, λ=hyperparams['lbda_krr'])
@@ -117,23 +117,28 @@ def run_before(cfg, hyperparams):
     data = make_data(cfg=cfg, builder=mvn.build_data_generator)
 
     # Instantiate base kernels
-    k1 = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
-    k2 = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
-    k = k1 * k2
+    r_plus = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
     l = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
-    k1.kernels[0].lengthscale = hyperparams['k1_lengthscale']
-    k2.lengthscale = hyperparams['k2_lengthscale']
+    r_plus.kernels[0].lengthscale = hyperparams['r_lengthscale']
     l.lengthscale = hyperparams['l_lengthscale']
 
     # Precompute kernel matrices
-    K = k(data.Xsemitrain, data.Xsemitrain).evaluate()
-    L = l(data.Xsemitrain, data.Xsemitrain)
-    Lλ = L.add_diag(hyperparams['lbda_cme'] * torch.ones(L.shape[0]))
-    chol = torch.linalg.cholesky(Lλ.evaluate())
-    Lλ_inv = torch.cholesky_inverse(chol)
+    # K = k(data.Xsemitrain, data.Xsemitrain).evaluate()
+    # L = l(data.Xsemitrain, data.Xsemitrain)
+    # Lλ = L.add_diag(hyperparams['lbda_cme'] * torch.ones(L.shape[0]))
+    # chol = torch.linalg.cholesky(Lλ.evaluate())
+    # Lλ_inv = torch.cholesky_inverse(chol)
+
+    # Precompute kernel matrices
+    with torch.no_grad():
+        R_plus = r_plus(data.Xsemitrain, data.Xsemitrain).evaluate()
+        L = l(data.Xsemitrain, data.Xsemitrain)
+        Lλ = L.add_diag(hyperparams['lbda_cme'] * torch.ones(L.shape[0]))
+        chol = torch.linalg.cholesky(Lλ.evaluate())
+        Lλ_inv = torch.cholesky_inverse(chol)
 
     # Instantiate projected kernel
-    kP = ProjectedKernel(k, l, data.Xsemitrain, K, Lλ_inv)
+    kP = ProjectedKernel(r_plus, l, data.Xsemitrain, R_plus, Lλ_inv)
 
     # Instantiate regressors
     project_before = KRR(kernel=kP, λ=hyperparams['lbda_krr'])
@@ -166,18 +171,12 @@ def run_after(cfg, hyperparams):
     data = make_data(cfg=cfg, builder=mvn.build_data_generator)
 
     # Instantiate base kernels
-    k1 = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
-    k2 = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
-    k = k1 * k2
+    r_plus = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
     l = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
-    k1.kernels[0].lengthscale = hyperparams['k1_lengthscale']
-    k2.lengthscale = hyperparams['k2_lengthscale']
+    k = r_plus * l
+    l = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
+    r_plus.kernels[0].lengthscale = hyperparams['r_lengthscale']
     l.lengthscale = hyperparams['l_lengthscale']
-
-    # Precompute kernel matrices
-    L = l(data.Xsemitrain, data.Xsemitrain)
-    Lλ = L.add_diag(hyperparams['lbda_cme'] * torch.ones(L.shape[0]))
-    chol = torch.linalg.cholesky(Lλ.evaluate())
 
     # Instantiate regressors
     baseline = KRR(kernel=k, λ=hyperparams['lbda_krr'])
@@ -191,9 +190,19 @@ def run_after(cfg, hyperparams):
 
     # Run prediction
     with torch.no_grad():
+        L = l(data.Xsemitrain, data.Xsemitrain)
+        Lλ = L.add_diag(hyperparams['lbda_cme'] * torch.ones(L.shape[0]))
+        chol = torch.linalg.cholesky(Lλ.evaluate())
+        Lλ_inv = torch.cholesky_inverse(chol)
+        Rplus = r_plus(data.Xtrain, data.Xsemitrain).evaluate()
+        Λ = l(X, data.Xtrain).evaluate()
+        Λ_Rplus = Λ.view(-1, len(data.Xtrain), 1).mul(Rplus)
+        CE_pred_baseline = (Lλ_inv @ l(data.Xsemitrain, X).evaluate()).T
+        CE_pred_baseline = torch.bmm(Λ_Rplus, CE_pred_baseline.unsqueeze(-1)).squeeze()
+        CE_pred_baseline = CE_pred_baseline @ baseline.α
+
         pred_baseline = baseline(X)
-        cme = torch.cholesky_solve(l(data.Xsemitrain, X).evaluate(), chol)
-        pred_after = pred_baseline - baseline(data.Xsemitrain) @ cme
+        pred_after = pred_baseline - CE_pred_baseline
 
     # Compute scores
     Y = Y.squeeze()
