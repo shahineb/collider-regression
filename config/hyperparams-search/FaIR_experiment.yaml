@@ -58,16 +58,25 @@ search:
       - 11
 
     # Lengthscale of primary kernel
-    k1_lengthscale:
-      - 0.5
+    r_lengthscale:
+      - 1.
+      - 2.
+      - 4.
+      - 8.
 
     # Lengthscale of primary kernel
-    k2_lengthscale:
-      - 3.
+    l_lengthscale:
+      - 1.
+      - 2.
+      - 4.
+      - 8.
 
     # KRR regularisation
     lbda_krr:
-      - 0.0001
+      - 1.
+      - 0.1
+      - 0.01
+      - 0.001
 
   # Search grid for "project before" model
   before_grid:
@@ -80,20 +89,25 @@ search:
       - 11
 
     # Lengthscale of primary kernel
-    k1_lengthscale:
-      - 0.5
+    r_lengthscale:
+      - 1.
+      - 2.
+      - 4.
+      - 8.
 
     # Lengthscale of primary kernel
-    k2_lengthscale:
-      - 3.
-
-    # Lengthscale of secondary kernel
     l_lengthscale:
+      - 1.
       - 2.
+      - 4.
+      - 8.
 
     # KRR regularisation
     lbda_krr:
-      - 0.0001
+      - 1.
+      - 0.1
+      - 0.01
+      - 0.001
 
     # CME regularisation
     lbda_cme:

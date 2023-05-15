@@ -67,29 +67,55 @@ def make_data(cfg):
         return generate
     data = generate_data.make_data(cfg=cfg, builder=build_data_generator)
     return data
+#
+#
+# def make_model(cfg, data):
+#     # Instantiate base kernels
+#     k1 = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
+#     k2 = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
+#     k = k1 * k2
+#     l = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
+#     k1.kernels[0].lengthscale = cfg['model']['k1']['lengthscale']
+#     k2.lengthscale = cfg['model']['k2']['lengthscale']
+#     l.lengthscale = cfg['model']['l']['lengthscale']
+#
+#     # Precompute kernel matrices
+#     with torch.no_grad():
+#         Xsemitrain = (data.Xsemitrain - data.mu_X)
+#         K = k(Xsemitrain, Xsemitrain).evaluate()
+#         L = l(Xsemitrain, Xsemitrain)
+#         Lλ = L.add_diag(cfg['model']['cme']['lbda'] * torch.ones(L.shape[0]))
+#         chol = torch.linalg.cholesky(Lλ.evaluate())
+#         Lλ_inv = torch.cholesky_inverse(chol)
+#
+#     # Instantiate projected kernel
+#     kP = ProjectedKernel(k, l, Xsemitrain, K, Lλ_inv)
+#
+#     # Instantiate regressors
+#     baseline = KRR(kernel=k, λ=cfg['model']['baseline']['lbda'])
+#     project_before = KRR(kernel=kP, λ=cfg['model']['project_before']['lbda'])
+#     return baseline, project_before
 
 
 def make_model(cfg, data):
     # Instantiate base kernels
-    k1 = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
-    k2 = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
-    k = k1 * k2
+    r_plus = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
     l = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
-    k1.kernels[0].lengthscale = cfg['model']['k1']['lengthscale']
-    k2.lengthscale = cfg['model']['k2']['lengthscale']
+    k = r_plus * l
+    r_plus.kernels[0].lengthscale = cfg['model']['r']['lengthscale']
     l.lengthscale = cfg['model']['l']['lengthscale']
 
     # Precompute kernel matrices
     with torch.no_grad():
         Xsemitrain = (data.Xsemitrain - data.mu_X)
-        K = k(Xsemitrain, Xsemitrain).evaluate()
+        R_plus = r_plus(Xsemitrain, Xsemitrain).evaluate()
         L = l(Xsemitrain, Xsemitrain)
         Lλ = L.add_diag(cfg['model']['cme']['lbda'] * torch.ones(L.shape[0]))
         chol = torch.linalg.cholesky(Lλ.evaluate())
         Lλ_inv = torch.cholesky_inverse(chol)
 
     # Instantiate projected kernel
-    kP = ProjectedKernel(k, l, Xsemitrain, K, Lλ_inv)
+    kP = ProjectedKernel(r_plus, l, Xsemitrain, R_plus, Lλ_inv)
 
     # Instantiate regressors
     baseline = KRR(kernel=k, λ=cfg['model']['baseline']['lbda'])
@@ -113,6 +139,7 @@ def evaluate(baseline, project_before, data, cfg):
     Y = torch.load(cfg['evaluation']['Ytest_path'])
     X = (X - data.mu_X)
     Y = (Y - data.mu_Y)
+    Xtrain = (data.Xtrain - data.mu_X)
     Xsemitrain = (data.Xsemitrain - data.mu_X)
 
     # Run prediction
@@ -120,17 +147,17 @@ def evaluate(baseline, project_before, data, cfg):
         pred_baseline = baseline(X)
         pred_before = project_before(X)
 
-        # Compute CMEs on test set
+        # Compute conditional expectation of baseline on test set
         Lλ_inv = project_before.kernel.Lλ_inv
-        cme = Lλ_inv @ project_before.kernel.l(Xsemitrain, X).evaluate()
+        Rplus = project_before.kernel.r_plus(Xtrain, Xsemitrain).evaluate()
+        Λ = project_before.kernel.l(X, Xtrain).evaluate()
+        Λ_Rplus = Λ.view(-1, len(Xtrain), 1).mul(Rplus)
+        CE_pred_baseline = (Lλ_inv @ project_before.kernel.l(Xsemitrain, X).evaluate()).T
+        CE_pred_baseline = torch.bmm(Λ_Rplus, CE_pred_baseline.unsqueeze(-1)).squeeze()
+        CE_pred_baseline = CE_pred_baseline @ baseline.α
 
         # Project baseline model
-        pred_after = pred_baseline - baseline(Xsemitrain) @ cme
-
-        # Unstandardize predictions
-        # pred_baseline = data.sigma_Y * pred_baseline + data.mu_Y
-        # pred_before = data.sigma_Y * pred_before + data.mu_Y
-        # pred_after = data.sigma_Y * pred_after + data.mu_Y
+        pred_after = pred_baseline - CE_pred_baseline
 
     # Compute MSEs
     zero_mse = torch.square(Y).mean()

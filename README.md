@@ -2,7 +2,7 @@
 
 
 <p align="center">
-  <img width="85%" src="docs/img/figure1.png"/>
+  <img width="50%" src="docs/img/figure1.png"/>
 </p>
 
 
@@ -29,7 +29,8 @@ $ python run_FaIR_experiment.py --cfg=config/runs/FaIR_experiment.yaml --o=path/
 ## Reproducing paper results
 
 #### Simulation example
-- Run experiment with multiple intialisation seeds
+
+- Run experiment with multiple initialisation seeds
 ```bash
 $ source ./repro/repro_mvn_experiment_multi_seeds.sh
 ```
@@ -49,12 +50,28 @@ $ source ./repro/repro_mvn_experiment_semiprop.sh
 $ source ./repro/repro_mvn_experiment_d_X2.sh
 ```
 
-- Run experiment with random forest model
+- Run experiment for random forest model
 > Go to `notebooks/mvn-random-forest-models.ipynb`
 
 
-- Generate plots
+- Visualise scores and generate plots
 > Go to `notebooks/mvn-experiments-score-analysis.ipynb`
+
+
+#### Aerosol radiative forcing example
+
+- Run experiment with multiple initialisation seeds
+```bash
+$ source ./repro/repro_FaIR_experiment_multi_seeds.sh
+```
+
+- Run experiment for random forest model
+> Go to `notebooks/FaIR-random-forest-models.ipynb`
+
+
+- Visualise scores and generate table
+> Go to `notebooks/FaIR-experiments-score-analysis.ipynb`
+
 
 
 
