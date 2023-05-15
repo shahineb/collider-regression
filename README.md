@@ -8,13 +8,13 @@
 
 ## Getting started
 
-#### Running code for simulation example
+#### Running code for *Simulation Example*
 - Run from root directory
 ```bash
 $ python run_mvn_experiment.py --cfg=config/runs/mvn_experiment.yaml --o=path/to/output/directory
 ```
 
-#### Running code for aerosol radiative forcing experiment
+#### Running code for *Aerosol Radiative Forcing Experiment*
 - Generate dataset (takes some time)
 ```bash
 $ python generate_FaIR_data.py --cfg=config/generation/generate_FaIR.yaml --o=data/FaIR/ --val
