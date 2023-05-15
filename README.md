@@ -1,18 +1,89 @@
-# collider-regression
+# Returning the Favour: When Regression Benefits from Probabilistic Causal Knowledge
 
 
-## Running a grid search experiment
+<p align="center">
+  <img width="85%" src="docs/img/figure1.png"/>
+</p>
 
-- Setup configuration file of the experiment + search grid under `config/search/my_config.yaml`
 
-- Run grid search script. For example, KRR with polynomial data generating process would be run as
+## Getting started
+
+#### Running code for simulation example
+- Run from root directory
 ```bash
-$ python run_grid_search_kernel_model_polynomial_data.py --cfg=config/search/my_config.yaml --o=my/output/directory/
+$ python run_mvn_experiment.py --cfg=config/runs/mvn_experiment.yaml --o=path/to/output/directory
 ```
 
-- Aggregate search results together into an xarray dataset
+#### Running code for aerosol radiative forcing experiment
+- Generate dataset (takes some time)
 ```bash
-$ python aggregate_grid_search_results.py --i=my/output/directory --o=another/output/directory
+$ python generate_FaIR_data.py --cfg=config/generation/generate_FaIR.yaml --o=data/FaIR/ --val
 ```
 
-This last script will dump a `cv-search-scores.nc` file which can then be loaded in the notebook `notebooks/score-analysis.ipynb` to visualise metrics against searched hyperparameters values.
+- Then run from root directory
+```bash
+$ python run_FaIR_experiment.py --cfg=config/runs/FaIR_experiment.yaml --o=path/to/output/directory
+```
+
+
+## Reproducing paper results
+
+#### Simulation example
+- Run experiment with multiple intialisation seeds
+```bash
+$ source ./repro/repro_mvn_experiment_multi_seeds.sh
+```
+
+- Run ablation study on number of training samples
+```bash
+$ source ./repro/repro_mvn_experiment_ntrain.sh
+```
+
+- Run ablation study on number semi-supervised samples
+```bash
+$ source ./repro/repro_mvn_experiment_semiprop.sh
+```
+
+- Run ablation study on number of dimensionality of X2
+```bash
+$ source ./repro/repro_mvn_experiment_d_X2.sh
+```
+
+- Run experiment with random forest model
+> Go to `notebooks/mvn-random-forest-models.ipynb`
+
+
+- Generate plots
+> Go to `notebooks/mvn-experiments-score-analysis.ipynb`
+
+
+
+
+
+## Installation
+
+Code implemented in Python 3.8.0
+
+#### Setting up environment
+
+Create and activate environment (with [pyenv](https://www.devopsroles.com/install-pyenv/) here)
+```bash
+$ pyenv virtualenv 3.8.0 venv
+$ pyenv activate venv
+$ (venv)
+```
+
+Install dependencies
+```bash
+$ (venv) pip install -r requirements.txt
+```
+
+#### References
+```
+@article{bouabid2023returning,
+  title={Returning The Favour: When Regression Benefits From Probabilistic Causal Knowledge},
+  author={Bouabid, Shahine and Fawkes, Jake and Sejdinovic, Dino},
+  journal={arXiv preprint arXiv:2301.11214},
+  year={2023}
+}
+```
