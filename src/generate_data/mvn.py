@@ -3,7 +3,6 @@ from math import pi
 
 
 def build_data_generator(d_X1, d_X2, noise, d_X2_max=8, **kwargs):
-    # Initialise covariance matrix
     torch.random.manual_seed(2000)
     M = torch.randn(4, d_X1 + d_X2_max + 1)
     M = M.div(M.norm(dim=0))
