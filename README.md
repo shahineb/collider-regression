@@ -28,7 +28,7 @@ $ python run_FaIR_experiment.py --cfg=config/runs/FaIR_experiment.yaml --o=path/
 
 ## Reproducing paper results
 
-### *Simulation Example*
+#### *Simulation Example*
 
 - Run experiment with multiple initialisation seeds
 ```bash
@@ -58,7 +58,7 @@ $ source ./repro/repro_mvn_experiment_d_X2.sh
 > Go to `notebooks/mvn-experiments-score-analysis.ipynb`
 
 
-### *Aerosol Radiative Forcing Example*
+#### *Aerosol Radiative Forcing Example*
 
 - Run experiment with multiple initialisation seeds
 ```bash
