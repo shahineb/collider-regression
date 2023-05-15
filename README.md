@@ -14,7 +14,7 @@
 $ python run_mvn_experiment.py --cfg=config/runs/mvn_experiment.yaml --o=path/to/output/directory
 ```
 
-#### Running code for *Aerosol Radiative Forcing Experiment*
+#### Running code for *Aerosol Radiative Forcing Example*
 - Generate dataset (takes some time)
 ```bash
 $ python generate_FaIR_data.py --cfg=config/generation/generate_FaIR.yaml --o=data/FaIR/ --val
@@ -28,7 +28,7 @@ $ python run_FaIR_experiment.py --cfg=config/runs/FaIR_experiment.yaml --o=path/
 
 ## Reproducing paper results
 
-#### Simulation example
+#### *Simulation Example*
 
 - Run experiment with multiple initialisation seeds
 ```bash
@@ -58,7 +58,7 @@ $ source ./repro/repro_mvn_experiment_d_X2.sh
 > Go to `notebooks/mvn-experiments-score-analysis.ipynb`
 
 
-#### Aerosol radiative forcing example
+#### *Aerosol Radiative Forcing Example*
 
 - Run experiment with multiple initialisation seeds
 ```bash
