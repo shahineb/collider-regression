@@ -11,6 +11,7 @@ def build_data_generator(noise, **kwargs):
     base_kwargs.update(forcing_noise=noise * np.array([1., 0., 1., 1.]), f2=base_kwargs['f2'])
     years = rcp45.Emissions.year
     emissions = rcp45.Emissions.emissions[:, [1, 3, 5, 9]].T
+    emissions[2] = emissions[2] * 2  # correct for underestimated SO2 emissions
 
     # Define sampling method
     def sample():

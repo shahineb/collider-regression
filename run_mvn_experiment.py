@@ -54,24 +54,22 @@ def main(args, cfg):
 
 def make_model(cfg, data):
     # Instantiate base kernels
-    k1 = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
-    k2 = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
-    k = k1 * k2
+    r_plus = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
     l = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
-    k1.kernels[0].lengthscale = cfg['model']['k1']['lengthscale']
-    k2.lengthscale = cfg['model']['k2']['lengthscale']
+    k = r_plus * l
+    r_plus.kernels[0].lengthscale = cfg['model']['r']['lengthscale']
     l.lengthscale = cfg['model']['l']['lengthscale']
 
     # Precompute kernel matrices
     with torch.no_grad():
-        K = k(data.Xsemitrain, data.Xsemitrain).evaluate()
+        R_plus = r_plus(data.Xsemitrain, data.Xsemitrain).evaluate()
         L = l(data.Xsemitrain, data.Xsemitrain)
         Lλ = L.add_diag(cfg['model']['cme']['lbda'] * torch.ones(L.shape[0]))
         chol = torch.linalg.cholesky(Lλ.evaluate())
         Lλ_inv = torch.cholesky_inverse(chol)
 
     # Instantiate projected kernel
-    kP = ProjectedKernel(k, l, data.Xsemitrain, K, Lλ_inv)
+    kP = ProjectedKernel(r_plus, l, data.Xsemitrain, R_plus, Lλ_inv)
 
     # Instantiate regressors
     baseline = KRR(kernel=k, λ=cfg['model']['baseline']['lbda'])
@@ -96,12 +94,17 @@ def evaluate(baseline, project_before, data, cfg):
         pred_baseline = baseline(X)
         pred_before = project_before(X)
 
-        # Compute CMEs on test set
+        # Compute conditional expectation of baseline on test set
         Lλ_inv = project_before.kernel.Lλ_inv
-        cme = Lλ_inv @ project_before.kernel.l(data.Xsemitrain, X).evaluate()
+        Rplus = project_before.kernel.r_plus(data.Xtrain, data.Xsemitrain).evaluate()
+        Λ = project_before.kernel.l(X, data.Xtrain).evaluate()
+        Λ_Rplus = Λ.view(-1, len(data.Xtrain), 1).mul(Rplus)
+        CE_pred_baseline = (Lλ_inv @ project_before.kernel.l(data.Xsemitrain, X).evaluate()).T
+        CE_pred_baseline = torch.bmm(Λ_Rplus, CE_pred_baseline.unsqueeze(-1)).squeeze()
+        CE_pred_baseline = CE_pred_baseline @ baseline.α
 
         # Project baseline model
-        pred_after = pred_baseline - baseline(data.Xsemitrain) @ cme
+        pred_after = pred_baseline - CE_pred_baseline
 
     # Compute MSEs
     baseline_mse = torch.square(Y.squeeze() - pred_baseline).mean()

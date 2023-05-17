@@ -69,9 +69,9 @@ def main(args, cfg):
     Parallel(n_jobs=cfg['search']['n_jobs'])(delayed(before_iteration)(hyperparams)
                                              for hyperparams in tqdm(hyperparams_before_grid))
 
-    after_iteration = build_iteration(run_after, 'after')
-    Parallel(n_jobs=cfg['search']['n_jobs'])(delayed(after_iteration)(hyperparams)
-                                             for hyperparams in tqdm(hyperparams_after_grid))
+    # after_iteration = build_iteration(run_after, 'after')
+    # Parallel(n_jobs=cfg['search']['n_jobs'])(delayed(after_iteration)(hyperparams)
+    #                                          for hyperparams in tqdm(hyperparams_after_grid))
 
 
 def run_baseline(cfg, hyperparams):
@@ -80,11 +80,11 @@ def run_baseline(cfg, hyperparams):
     data = make_data(cfg=cfg)
 
     # Instantiate base kernels
-    k1 = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
-    k2 = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
-    k = k1 * k2
-    k1.kernels[0].lengthscale = hyperparams['k1_lengthscale']
-    k2.lengthscale = hyperparams['k2_lengthscale']
+    r_plus = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
+    l = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
+    k = r_plus * l
+    r_plus.kernels[0].lengthscale = hyperparams['r_lengthscale']
+    l.lengthscale = hyperparams['l_lengthscale']
 
     # Instantiate regressors
     baseline = KRR(kernel=k, λ=hyperparams['lbda_krr'])
@@ -121,24 +121,22 @@ def run_before(cfg, hyperparams):
     data = make_data(cfg=cfg)
 
     # Instantiate base kernels
-    k1 = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
-    k2 = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
-    k = k1 * k2
+    r_plus = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
     l = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
-    k1.kernels[0].lengthscale = hyperparams['k1_lengthscale']
-    k2.lengthscale = hyperparams['k2_lengthscale']
+    r_plus.kernels[0].lengthscale = hyperparams['r_lengthscale']
     l.lengthscale = hyperparams['l_lengthscale']
 
     # Precompute kernel matrices
-    Xsemitrain = (data.Xsemitrain - data.mu_X)
-    K = k(Xsemitrain, Xsemitrain).evaluate()
-    L = l(Xsemitrain, Xsemitrain)
-    Lλ = L.add_diag(hyperparams['lbda_cme'] * torch.ones(L.shape[0]))
-    chol = torch.linalg.cholesky(Lλ.evaluate())
-    Lλ_inv = torch.cholesky_inverse(chol)
+    with torch.no_grad():
+        Xsemitrain = (data.Xsemitrain - data.mu_X)
+        R_plus = r_plus(Xsemitrain, Xsemitrain).evaluate()
+        L = l(Xsemitrain, Xsemitrain)
+        Lλ = L.add_diag(hyperparams['lbda_cme'] * torch.ones(L.shape[0]))
+        chol = torch.linalg.cholesky(Lλ.evaluate())
+        Lλ_inv = torch.cholesky_inverse(chol)
 
     # Instantiate projected kernel
-    kP = ProjectedKernel(k, l, Xsemitrain, K, Lλ_inv)
+    kP = ProjectedKernel(r_plus, l, Xsemitrain, R_plus, Lλ_inv)
 
     # Instantiate regressors
     project_before = KRR(kernel=kP, λ=hyperparams['lbda_krr'])
@@ -175,12 +173,10 @@ def run_after(cfg, hyperparams):
     data = make_data(cfg=cfg)
 
     # Instantiate base kernels
-    k1 = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
-    k2 = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
-    k = k1 * k2
+    r_plus = kernels.RBFKernel(active_dims=list(range(data.d_X1))) + ConstantKernel()
     l = kernels.RBFKernel(active_dims=list(range(data.d_X1, data.Xtrain.size(1))))
-    k1.kernels[0].lengthscale = hyperparams['k1_lengthscale']
-    k2.lengthscale = hyperparams['k2_lengthscale']
+    k = r_plus * l
+    r_plus.kernels[0].lengthscale = hyperparams['r_lengthscale']
     l.lengthscale = hyperparams['l_lengthscale']
 
     # Precompute kernel matrices

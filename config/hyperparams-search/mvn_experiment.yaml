@@ -21,7 +21,7 @@ data:
   noise: 0.1
 
   # Proportion of semi-supervised samples (added on top of train samples -- 1 = 100%)
-  semi_prop: 1.
+  semi_prop: 100
 
 
 
@@ -48,14 +48,14 @@ search:
       - 11
 
     # Lengthscale of primary kernel
-    k1_lengthscale:
+    r_lengthscale:
       - 1.
       - 2.
       - 4.
       - 8.
 
     # Lengthscale of primary kernel
-    k2_lengthscale:
+    l_lengthscale:
       - 1.
       - 2.
       - 4.
@@ -80,19 +80,18 @@ search:
       - 11
 
     # Lengthscale of primary kernel
-    k1_lengthscale:
+    r_lengthscale:
       - 1.
       - 2.
       - 4.
       - 8.
 
     # Lengthscale of primary kernel
-    k2_lengthscale:
-      - 4.
-
-    # Lengthscale of secondary kernel
     l_lengthscale:
+      - 1.
+      - 2.
       - 4.
+      - 8.
 
     # KRR regularisation
     lbda_krr:
@@ -118,26 +117,22 @@ search:
       - 11
 
     # Lengthscale of primary kernel
-    k1_lengthscale:
-      - 1.
-      - 2.
-      - 4.
+    r_lengthscale:
+      # - 1.
+      # - 2.
+      # - 4.
       - 8.
-
-    # Lengthscale of primary kernel
-    k2_lengthscale:
-      - 4.
 
     # Lengthscale of secondary kernel
     l_lengthscale:
-      - 4.
+      - 2.
 
     # KRR regularisation
     lbda_krr:
-      - 1.
-      - 0.1
+      # - 1.
+      # - 0.1
       - 0.01
-      - 0.001
+      # - 0.001
 
     # CME regularisation
     lbda_cme:
