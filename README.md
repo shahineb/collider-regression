@@ -97,10 +97,10 @@ $ (venv) pip install -r requirements.txt
 
 #### References
 ```
-@article{bouabid2023returning,
-  title={Returning The Favour: When Regression Benefits From Probabilistic Causal Knowledge},
+@inproceedings{BouFawSej2023,
+  title={{Returning The Favour: When Regression Benefits From Probabilistic Causal Knowledge}},
   author={Bouabid, Shahine and Fawkes, Jake and Sejdinovic, Dino},
-  journal={arXiv preprint arXiv:2301.11214},
-  year={2023}
+  year={2023},
+  journal={International Conference on Machine Learning (ICML)}
 }
 ```
